@@ -23,5 +23,10 @@ fn run_day(day: String) {
     let filename = format!("inputs/day_{}.txt", day);
     let input = parse_input(&filename);
 
-    println!("Day {}: first star solution: {} second star solution {}", day, day_01::first_star(&input), day_01::second_star(&input));
+    let (first_star_solution, second_star_solution) = match &day[..] {
+        "01" => (day_01::first_star(&input), day_01::second_star(&input)),
+        _ => (String::from("N/A"), String::from("N/A")),
+    };
+
+    println!("Day {}: first star solution: {} second star solution {}", day, first_star_solution, second_star_solution);
 }
