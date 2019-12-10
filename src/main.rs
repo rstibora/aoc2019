@@ -1,32 +1,27 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::cmp::max;
+
+mod utils;
+mod day_01;
 
 fn main() {
-    let filename = "inputs/day_01.txt";
+    run_day(String::from("01"));
+}
+
+fn parse_input(filename: &String) -> Vec<String> {
     let file = File::open(&filename).unwrap();
     let reader = BufReader::new(&file);
 
-    let mut total_fuel_for_mass = 0;
-    let mut total_fuel_for_fuel_and_mass = 0;
+    let mut result = Vec::new();
     for line in reader.lines() {
-        let module_mass = line.expect("Not a number encountered!").parse::<i32>().unwrap();
-        total_fuel_for_mass += fuel_for_mass(module_mass);
-        total_fuel_for_fuel_and_mass += fuel_for_mass_recursive(module_mass);
+        result.push(line.unwrap());
     }
-
-    println!("Star 1 solution: {}", total_fuel_for_mass);
-    println!("Star 2 solution: {}", total_fuel_for_fuel_and_mass);
+    result
 }
 
-fn fuel_for_mass_recursive(mass: i32) -> i32 {
-    let fuel_needed = fuel_for_mass(mass);
-    if fuel_needed == 0 {
-        return 0;
-    }
-    fuel_needed + fuel_for_mass_recursive(fuel_needed)
-}
+fn run_day(day: String) {
+    let filename = format!("inputs/day_{}.txt", day);
+    let input = parse_input(&filename);
 
-fn fuel_for_mass(mass: i32) -> i32 {
-    max((mass as f64 / 3.) as i32 - 2, 0)
+    println!("Day {}: first star solution: {} second star solution {}", day, day_01::first_star(&input), day_01::second_star(&input));
 }
