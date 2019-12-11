@@ -3,9 +3,10 @@ use std::io::{BufRead, BufReader};
 
 mod utils;
 mod day_01;
+mod day_02;
 
 fn main() {
-    run_day(String::from("01"));
+    run_day(String::from("02"));
 }
 
 fn parse_input(filename: &String) -> Vec<String> {
@@ -25,6 +26,7 @@ fn run_day(day: String) {
 
     let (first_star_solution, second_star_solution) = match &day[..] {
         "01" => (day_01::first_star(&input), day_01::second_star(&input)),
+        "02" => (day_02::first_star(&input), String::from("N/A")),
         _ => (String::from("N/A"), String::from("N/A")),
     };
 
