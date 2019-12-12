@@ -1,16 +1,30 @@
 
 pub fn first_star(input: &Vec<String>) -> String {
     // Input is a single line of numbers.
-    let input = input[0].split(",");
-    let mut program: Vec<i32> = Vec::new();
-    for item in input {
-        program.push(item.parse().unwrap());
+    let program = parse_intcode_program(&input[0]);
+    let output = run_program_with_inputs(program, 12, 2);
+    output.to_string()
+}
+
+pub fn second_star(input: &Vec<String>) -> String {
+    const EXPECTED_VALUE: i32 = 19690720;
+
+    let program = parse_intcode_program(&input[0]);
+    for noun in 0..99 {
+        for verb in 0..99 {
+            if run_program_with_inputs(program.clone(), noun, verb) == EXPECTED_VALUE {
+                return (100 * noun + verb).to_string()
+            }
+        }
     }
+    panic!();
+}
+
+fn run_program_with_inputs(mut program: Vec<i32>, arg_a: i32, arg_b: i32) -> i32 {
     let mut instruction_idx = 0;
 
-    // Restoring the program.
-    program[1] = 12;
-    program[2] = 2;
+    program[1] = arg_a;
+    program[2] = arg_b;
 
     loop {
         let addr_op_a = handle_negative_address(program[instruction_idx + 1], program.len());
@@ -26,8 +40,7 @@ pub fn first_star(input: &Vec<String>) -> String {
 
         instruction_idx += 4;
     }
-
-    program[0].to_string()
+    program[0]
 }
 
 fn handle_negative_address(address: i32, program_lenght: usize) -> usize {
@@ -38,3 +51,10 @@ fn handle_negative_address(address: i32, program_lenght: usize) -> usize {
     }
 }
 
+fn parse_intcode_program(program_as_string: &String) -> Vec<i32> {
+    let mut program: Vec<i32> = Vec::new();
+    for item in program_as_string.split(",") {
+        program.push(item.parse().unwrap());
+    }
+    program
+}

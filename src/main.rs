@@ -26,7 +26,7 @@ fn run_day(day: String) {
 
     let (first_star_solution, second_star_solution) = match &day[..] {
         "01" => (day_01::first_star(&input), day_01::second_star(&input)),
-        "02" => (day_02::first_star(&input), String::from("N/A")),
+        "02" => (day_02::first_star(&input), day_02::second_star(&input)),
         _ => (String::from("N/A"), String::from("N/A")),
     };
 
