@@ -5,9 +5,10 @@ mod utils;
 mod day_01;
 mod day_02;
 mod day_03;
+mod day_04;
 
 fn main() {
-    run_day(String::from("03"), false);
+    run_day(String::from("04"), false);
 }
 
 fn parse_input(filename: &String) -> Vec<String> {
@@ -33,6 +34,7 @@ fn run_day(day: String, test_input:bool) {
         "01" => (day_01::first_star(&input), day_01::second_star(&input)),
         "02" => (day_02::first_star(&input), day_02::second_star(&input)),
         "03" => (day_03::first_star(&input), day_03::second_star(&input)),
+        "04" => (day_04::first_star(&input), day_04::second_star(&input)),
         _ => (String::from("N/A"), String::from("N/A")),
     };
 
