@@ -56,8 +56,7 @@ fn check_has_double(number: &Number) -> bool {
 }
 
 fn check_has_isolated_double(number: &Number) -> bool {
-    let last_element_index = NUMBER_LENGHT - 1;
-    for i in 1..=last_element_index {
+    for i in 1..NUMBER_LENGHT {
         if number[i-1] == number[i] {
             match i {
                 1 => {
@@ -65,7 +64,7 @@ fn check_has_isolated_double(number: &Number) -> bool {
                         return true;
                     }
                 },
-                _ if i == last_element_index => {
+                _ if i == NUMBER_LENGHT - 1 => {
                     if number[i-2] != number[i-1] {
                         return true;
                     }
