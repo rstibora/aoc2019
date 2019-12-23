@@ -9,15 +9,7 @@ pub fn first_star(input: &Vec<String>) -> String {
     let lower_bound = to_u32(&parse_number(&lower_bound[..]));
     let upper_bound = to_u32(&parse_number(&upper_bound[..]));
 
-    let mut possible_numbers: Vec<u32> = Vec::new();
-    let mut number = [0, 0, 0, 0, 0, 0];
-    while to_u32(&number) <= upper_bound {
-        if check_has_double(&number) && to_u32(&number) >= lower_bound {
-            possible_numbers.push(to_u32(&number));
-        }
-        number = increment(&number, NUMBER_LENGHT - 1);
-    }
-    possible_numbers.len().to_string()
+    generate_numbers_with_check_function(&lower_bound, &upper_bound, check_has_double).len().to_string()
 }
 
 pub fn second_star(input: &Vec<String>) -> String {
@@ -27,19 +19,23 @@ pub fn second_star(input: &Vec<String>) -> String {
     let lower_bound = to_u32(&parse_number(&lower_bound[..]));
     let upper_bound = to_u32(&parse_number(&upper_bound[..]));
 
-    let mut possible_numbers: Vec<u32> = Vec::new();
-    let mut number = [0, 0, 0, 0, 0, 0];
-    while to_u32(&number) <= upper_bound {
-        if check_has_isolated_double(&number) && to_u32(&number) >= lower_bound {
-            possible_numbers.push(to_u32(&number));
+    generate_numbers_with_check_function(&lower_bound, &upper_bound, check_has_isolated_double).len().to_string()
+}
+
+fn generate_numbers_with_check_function(lower_bound: &u32, upper_bound: &u32, check_function: impl Fn(&Number) -> bool) -> Vec<Number> {
+    let mut possible_numbers: Vec<Number> = Vec::new();
+    let mut number = [0; 6];
+    while &to_u32(&number) <= upper_bound {
+        if check_function(&number) && &to_u32(&number) >= lower_bound {
+            possible_numbers.push(number);
         }
         number = increment(&number, NUMBER_LENGHT - 1);
     }
-    possible_numbers.len().to_string()
+    possible_numbers
 }
 
 fn parse_number(string_number: &str) -> Number {
-    let mut number = [0, 0, 0, 0, 0, 0];
+    let mut number = [0; 6];
     for (idx, string_char) in string_number.chars().enumerate() {
         number[idx] = string_char.to_digit(10).unwrap();
     }
