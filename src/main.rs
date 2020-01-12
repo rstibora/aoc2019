@@ -1,42 +1,17 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-
+mod interface;
 mod utils;
-mod day_01;
-mod day_02;
-mod day_03;
-mod day_04;
+mod aoc_error;
+mod year2019;
+
+use interface::AdventOfCodeCalendar;
 
 fn main() {
-    run_day(String::from("04"), false);
-}
-
-fn parse_input(filename: &String) -> Vec<String> {
-    let file = File::open(&filename).unwrap();
-    let reader = BufReader::new(&file);
-
-    let mut result = Vec::new();
-    for line in reader.lines() {
-        result.push(line.unwrap());
-    }
-    result
-}
-
-fn run_day(day: String, test_input:bool) {
-    let mut test_suffix = "";
-    if test_input {
-        test_suffix = "_test";
-    }
-    let filename = format!("inputs/day_{}{}.txt", day, test_suffix);
-    let input = parse_input(&filename);
-
-    let (first_star_solution, second_star_solution) = match &day[..] {
-        "01" => (day_01::first_star(&input), day_01::second_star(&input)),
-        "02" => (day_02::first_star(&input), day_02::second_star(&input)),
-        "03" => (day_03::first_star(&input), day_03::second_star(&input)),
-        "04" => (day_04::first_star(&input), day_04::second_star(&input)),
-        _ => (String::from("N/A"), String::from("N/A")),
-    };
-
-    println!("Day {}: first star solution: {}, second star solution {}", day, first_star_solution, second_star_solution);
+    // TODO: get rid of unwrap and expect calls (do proper error handling).
+    // TODO: pass proper slice types instead of Vectors.
+    let day = 1;
+    let calendar = year2019::calendar::Calendar2019::new();
+    let (first_star, second_star) = calendar.run_day(day);
+    let first_star = first_star.unwrap_or_else(|error| error.to_string());
+    let second_star = second_star.unwrap_or_else(|error| error.to_string());
+    println!("Day {}: first star result: {}, second star result: {}", day, first_star, second_star);
 }
