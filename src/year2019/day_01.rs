@@ -1,8 +1,9 @@
 use std::cmp::max;
 
-use crate::{aoc_error::AocError, utils};
+use crate::aoc_error::{AocError, AocResult};
+use crate::utils;
 
-pub fn first_star(input: &str) -> Result<String, AocError> {
+pub fn first_star(input: &str) -> AocResult {
     // TODO: ugly, fix.
     let input = match utils::input_conversion::input_to_lines(input) {
         Ok(input) => input,
@@ -16,7 +17,7 @@ pub fn first_star(input: &str) -> Result<String, AocError> {
     Ok(total_fuel_for_mass.to_string())
 }
 
-pub fn second_star(input: &str) -> Result<String, AocError> {
+pub fn second_star(input: &str) -> AocResult {
     // TODO: ugly, fix.
     let input = match utils::input_conversion::input_to_lines(input) {
         Ok(input) => input,

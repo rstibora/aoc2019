@@ -1,19 +1,23 @@
+use crate::aoc_error::{AocResult, AocError};
+use crate::utils;
 
-pub fn first_star(input: &Vec<String>) -> String {
+pub fn first_star(input: &str) -> AocResult {
     // Input is a single line of numbers.
-    let program = parse_intcode_program(&input[0]);
+    let input = input.lines().next().ok_or(AocError::new("Could not parse a line"))?;
+    let program = parse_intcode_program(input)?;
     let output = run_program_with_inputs(program, 12, 2);
-    output.to_string()
+    Ok(output.to_string())
 }
 
-pub fn second_star(input: &Vec<String>) -> String {
+pub fn second_star(input: &str) -> AocResult {
     const EXPECTED_VALUE: i32 = 19690720;
 
-    let program = parse_intcode_program(&input[0]);
+    let input = input.lines().next().ok_or(AocError::new("Could not parse a line"))?;
+    let program = parse_intcode_program(input)?;
     for noun in 0..99 {
         for verb in 0..99 {
             if run_program_with_inputs(program.clone(), noun, verb) == EXPECTED_VALUE {
-                return (100 * noun + verb).to_string()
+                return Ok((100 * noun + verb).to_string())
             }
         }
     }
@@ -51,10 +55,13 @@ fn handle_negative_address(address: i32, program_lenght: usize) -> usize {
     }
 }
 
-fn parse_intcode_program(program_as_string: &String) -> Vec<i32> {
+fn parse_intcode_program(program_as_string: &str) -> Result<Vec<i32>, AocError> {
     let mut program: Vec<i32> = Vec::new();
     for item in program_as_string.split(",") {
-        program.push(item.parse().unwrap());
+        match item.parse() {
+            Ok(value) => program.push(value),
+            Err(error) => return Err(AocError::new(&format!("Could not parse intcode program: {}", error.to_string()))),
+        }
     }
-    program
+    Ok(program)
 }

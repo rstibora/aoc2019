@@ -5,6 +5,8 @@ pub struct AocError {
     message: String,
 }
 
+pub type AocResult = Result<String, AocError>;
+
 impl AocError {
     pub fn new(message: &str) -> AocError {
         AocError { message: message.to_owned() }
