@@ -1,8 +1,13 @@
 use std::collections::HashMap;
 
-pub fn first_star(input: &Vec<String>) -> String {
-    let wire_a = path_to_grid(parse_path_input(&input[0]));
-    let wire_b = path_to_grid(parse_path_input(&input[1]));
+use crate::aoc_error::{AocError, AocResult};
+
+pub fn first_star(input: &str) -> AocResult {
+    let mut input_lines = input.lines();
+    let wire_a = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
+        AocError::new(String::from("Not enough lines in the input")))?;
+    let wire_b = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
+        AocError::new(String::from("Not enough lines in the input")))?;
     let intersection_grid = intersect_grids(wire_a, wire_b);
 
     let mut closest_intersection = std::i32::MAX;
@@ -12,12 +17,15 @@ pub fn first_star(input: &Vec<String>) -> String {
         }
         closest_intersection = std::cmp::min(closest_intersection, manhattan_distance(&(0, 0), key));
     }
-    return closest_intersection.to_string();
+    return Ok(closest_intersection.to_string());
 }
 
-pub fn second_star(input: &Vec<String>) -> String {
-    let wire_a = path_to_grid(parse_path_input(&input[0]));
-    let wire_b = path_to_grid(parse_path_input(&input[1]));
+pub fn second_star(input: &str) -> AocResult {
+    let mut input_lines = input.lines();
+    let wire_a = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
+        AocError::new(String::from("Not enough lines in the input")))?;
+    let wire_b = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
+        AocError::new(String::from("Not enough lines in the input")))?;
     let intersection_grid = intersect_grids(wire_a, wire_b);
 
     let mut closest_intersection: Option<((i32, i32), u32)> = None;
@@ -37,9 +45,9 @@ pub fn second_star(input: &Vec<String>) -> String {
     }
 
     if let Some((_, num_steps)) = closest_intersection {
-        return num_steps.to_string();
+        return Ok(num_steps.to_string());
     } else {
-        return String::from("N/A");
+        return Err(AocError::new(String::from("N/A")));
     }
 }
 
@@ -79,7 +87,7 @@ fn manhattan_distance(point_a: &(i32, i32), point_b: &(i32, i32)) -> i32 {
     i32::abs(point_b.0 - point_a.0) + i32::abs(point_b.1 - point_a.1)
 }
 
-fn parse_path_input(input: &String) -> Vec<(char, i32)> {
+fn parse_path_input(input: &str) -> Vec<(char, i32)> {
     let splits = input.split(",");
     let mut output: Vec<(char, i32)> = Vec::new();
     for split in splits {

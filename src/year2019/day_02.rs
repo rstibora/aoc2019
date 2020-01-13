@@ -1,9 +1,8 @@
 use crate::aoc_error::{AocResult, AocError};
-use crate::utils;
 
 pub fn first_star(input: &str) -> AocResult {
     // Input is a single line of numbers.
-    let input = input.lines().next().ok_or(AocError::new("Could not parse a line"))?;
+    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
     let program = parse_intcode_program(input)?;
     let output = run_program_with_inputs(program, 12, 2);
     Ok(output.to_string())
@@ -12,7 +11,7 @@ pub fn first_star(input: &str) -> AocResult {
 pub fn second_star(input: &str) -> AocResult {
     const EXPECTED_VALUE: i32 = 19690720;
 
-    let input = input.lines().next().ok_or(AocError::new("Could not parse a line"))?;
+    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
     let program = parse_intcode_program(input)?;
     for noun in 0..99 {
         for verb in 0..99 {
@@ -60,7 +59,7 @@ fn parse_intcode_program(program_as_string: &str) -> Result<Vec<i32>, AocError> 
     for item in program_as_string.split(",") {
         match item.parse() {
             Ok(value) => program.push(value),
-            Err(error) => return Err(AocError::new(&format!("Could not parse intcode program: {}", error.to_string()))),
+            Err(error) => return Err(AocError::new(format!("Could not parse intcode program: {}", error.to_string()))),
         }
     }
     Ok(program)

@@ -7,7 +7,7 @@ pub fn first_star(input: &str) -> AocResult {
     // TODO: ugly, fix.
     let input = match utils::input_conversion::input_to_lines(input) {
         Ok(input) => input,
-        Err(error) => return Err(AocError::new("Could not convert to lines"))
+        Err(error) => return Err(AocError::new(String::from("Could not convert to lines")))
     };
     let mut total_fuel_for_mass = 0;
 
@@ -21,7 +21,7 @@ pub fn second_star(input: &str) -> AocResult {
     // TODO: ugly, fix.
     let input = match utils::input_conversion::input_to_lines(input) {
         Ok(input) => input,
-        Err(error) => return Err(AocError::new("Could not convert to lines"))
+        Err(error) => return Err(AocError::new(String::from("Could not convert to lines")))
     };
     let mut total_fuel_for_mass = 0;
 

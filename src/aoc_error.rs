@@ -8,8 +8,8 @@ pub struct AocError {
 pub type AocResult = Result<String, AocError>;
 
 impl AocError {
-    pub fn new(message: &str) -> AocError {
-        AocError { message: message.to_owned() }
+    pub fn new(message: String) -> AocError {
+        AocError { message }
     }
 }
 
