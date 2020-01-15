@@ -1,25 +1,33 @@
 
+use crate::aoc_error::{AocError, AocResult};
+
 const NUMBER_LENGHT: usize = 6;
 type Number = [u32; NUMBER_LENGHT];
 
-pub fn first_star(input: &Vec<String>) -> String {
-    let lower_bound: String = input[0].chars().take(6).collect();
-    let upper_bound: String = input[0].chars().skip(7).take(6).collect();
+pub fn first_star(input: &str) -> AocResult {
+    let first_line = input.lines().next().ok_or(
+        AocError::new(String::from("Not enough lines in the input")))?;
+
+    let lower_bound: String = first_line.chars().take(6).collect();
+    let upper_bound: String = first_line.chars().skip(7).take(6).collect();
 
     let lower_bound = to_u32(&parse_number(&lower_bound[..]));
     let upper_bound = to_u32(&parse_number(&upper_bound[..]));
 
-    generate_numbers_with_check_function(&lower_bound, &upper_bound, check_has_double).len().to_string()
+    Ok(generate_numbers_with_check_function(&lower_bound, &upper_bound, check_has_double).len().to_string())
 }
 
-pub fn second_star(input: &Vec<String>) -> String {
-    let lower_bound: String = input[0].chars().take(6).collect();
-    let upper_bound: String = input[0].chars().skip(7).take(6).collect();
+pub fn second_star(input: &str) -> AocResult {
+    let first_line = input.lines().next().ok_or(
+        AocError::new(String::from("Not enough lines in the input")))?;
+
+    let lower_bound: String = first_line.chars().take(6).collect();
+    let upper_bound: String = first_line.chars().skip(7).take(6).collect();
 
     let lower_bound = to_u32(&parse_number(&lower_bound[..]));
     let upper_bound = to_u32(&parse_number(&upper_bound[..]));
 
-    generate_numbers_with_check_function(&lower_bound, &upper_bound, check_has_isolated_double).len().to_string()
+    Ok(generate_numbers_with_check_function(&lower_bound, &upper_bound, check_has_isolated_double).len().to_string())
 }
 
 fn generate_numbers_with_check_function(lower_bound: &u32, upper_bound: &u32, check_function: impl Fn(&Number) -> bool) -> Vec<Number> {

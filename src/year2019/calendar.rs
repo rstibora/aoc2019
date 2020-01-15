@@ -2,7 +2,7 @@ use crate::interface::AdventOfCodeCalendar;
 use crate::utils::file_handling;
 use crate::aoc_error::AocError;
 
-use super::{day_01, day_02, day_03};
+use super::{day_01, day_02, day_03, day_04};
 
 const INPUT_FOLDER: &str = "inputs";
 
@@ -25,10 +25,10 @@ impl AdventOfCodeCalendar for Calendar2019 {
         };
 
         match day_number {
-            1 => (day_01::first_star(&input) , day_01::second_star(&input)),
-            2 => (day_02::first_star(&input) , day_02::second_star(&input)),
-            3 => (day_03::first_star(&input) , day_03::second_star(&input)),
-            // 4 => (day_04::first_star(&input) , day_04::second_star(&input)),
+            1 => (day_01::first_star(&input), day_01::second_star(&input)),
+            2 => (day_02::first_star(&input), day_02::second_star(&input)),
+            3 => (day_03::first_star(&input), day_03::second_star(&input)),
+            4 => (day_04::first_star(&input), day_04::second_star(&input)),
             _ => {
                 let message = format!("Day {} not implemented", day_number);
                 return (Err(AocError::new(message.clone())), Err(AocError::new(message)));
