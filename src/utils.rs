@@ -21,7 +21,6 @@ pub mod file_handling {
 
     pub fn get_input_for_day(day_number: u32, folder: &str) -> Result<String, io::Error> {
         let path = get_whole_file_path(folder, &get_input_filename(day_number), &get_input_extension());
-        println!("{}, {}", env::current_dir().unwrap().to_str().unwrap(), path.to_str().unwrap());
         fs::read_to_string(path)
     }
 
@@ -34,8 +33,9 @@ pub mod file_handling {
             file_path.set_extension(get_test_result_suffix());
             let results = fs::read_to_string(&file_path)?;
 
-            let first_star_solution = results.lines().next().map(str::to_string);
-            let second_star_solution = results.lines().next().map(str::to_string);
+            let mut results = results.lines().map(str::to_string);
+            let first_star_solution = results.next();
+            let second_star_solution = results.next();
 
             inputs.push(InputWithResult { input, first_star_solution, second_star_solution });
         }
@@ -51,17 +51,13 @@ pub mod file_handling {
 
             // Check that the current item is a file with the proper name and suffix (expected result file).
             let is_correct_day = path.file_name().and_then(OsStr::to_str).map(|x| {x.contains(&get_input_filename(day_number))}).unwrap_or(false);
-            let has_correct_extension = !path.extension().and_then(OsStr::to_str).map(|x| { x == get_test_result_suffix() }).unwrap_or(false);
+            let has_correct_extension = path.extension().and_then(OsStr::to_str).map(|x| { x == get_test_result_suffix() }).unwrap_or(false);
             if !is_correct_day || !has_correct_extension {
                 continue;
             }
 
             let mut input_path = path.clone();
             input_path.set_extension("");
-            if !input_path.is_file() {
-                // TODO: return error here once you know how to handle different kinds of errors.
-                continue;
-            }
             filenames.push(input_path);
         }
         Ok(filenames)
