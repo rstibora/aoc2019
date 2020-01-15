@@ -1,3 +1,3 @@
-pub fn get_inputs_folder() -> String {
-    String::from("inputs")
+pub fn get_inputs_folder_path() -> &'static str {
+    "inputs"
 }

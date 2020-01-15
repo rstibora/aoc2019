@@ -2,9 +2,9 @@ use crate::interface::AdventOfCodeCalendar;
 use crate::utils::file_handling;
 use crate::aoc_error::AocError;
 
+use super::configuration;
 use super::{day_01, day_02, day_03, day_04};
 
-const INPUT_FOLDER: &str = "inputs";
 
 pub struct Calendar2019;
 
@@ -16,7 +16,7 @@ impl Calendar2019 {
 
 impl AdventOfCodeCalendar for Calendar2019 {
     fn run_day(&self, day_number: u32) -> (Result<String, AocError>, Result<String, AocError>) {
-        let input = match file_handling::get_input_for_day(day_number, INPUT_FOLDER) {
+        let input = match file_handling::get_input_for_day(day_number, configuration::get_inputs_folder_path()) {
             Ok(input) => input,
             Err(error) => {
                 let message = format!("IO error: {}", error.to_string());
