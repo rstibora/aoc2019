@@ -57,6 +57,10 @@ enum Instruction {
     Mul(Parameter, Parameter, Address),
     Inp(Address),
     Out(Parameter),
+    Jit(Parameter, Parameter),
+    Jif(Parameter, Parameter),
+    Lst(Parameter, Parameter, Address),
+    Eqs(Parameter, Parameter, Address),
 }
 
 pub struct IntcodeComputer {
@@ -137,6 +141,28 @@ impl IntcodeComputer {
                 let parameter = self.parse_parameter(1, &parameter_modes)?;
                 Ok(Instruction::Out(parameter))
             },
+            5 => {
+                let parameter = self.parse_parameter(1, &parameter_modes)?;
+                let result_address = self.parse_parameter(2, &parameter_modes)?;
+                Ok(Instruction::Jit(parameter, result_address))
+            }
+            6 => {
+                let parameter = self.parse_parameter(1, &parameter_modes)?;
+                let result_address = self.parse_parameter(2, &parameter_modes)?;
+                Ok(Instruction::Jif(parameter, result_address))
+            },
+            7 => {
+                let first_parameter = self.parse_parameter(1, &parameter_modes)?;
+                let second_parameter = self.parse_parameter(2, &parameter_modes)?;
+                let result_address = self.program[self.instruction_pointer + 3];
+                Ok(Instruction::Lst(first_parameter, second_parameter, result_address))
+            },
+            8 => {
+                let first_parameter = self.parse_parameter(1, &parameter_modes)?;
+                let second_parameter = self.parse_parameter(2, &parameter_modes)?;
+                let result_address = self.program[self.instruction_pointer + 3];
+                Ok(Instruction::Eqs(first_parameter, second_parameter, result_address))
+            },
             unknown_opcode => Err(IntcodeComputerError::new(String::from(format!("Unknown opcode {}", unknown_opcode))))
         }
     }
@@ -152,17 +178,17 @@ impl IntcodeComputer {
 
     fn execute_instruction(&mut self, instruction: &Instruction) -> Result<(), IntcodeComputerError>{
         match instruction {
-            Instruction::Halt => return Ok(()),
+            Instruction::Halt => {
+                return Ok(())
+            }
             Instruction::Add(parameter_a, parameter_b, address) => {
                 let value = self.load_parameter(parameter_a) + self.load_parameter(parameter_b);
                 self.store_value(value, address);
-                println!("ADD {} {}; storing {} at {}", parameter_a, parameter_b, value, address);
                 self.instruction_pointer += 4;
             },
             Instruction::Mul(parameter_a, parameter_b, address) => {
                 let value = self.load_parameter(parameter_a) * self.load_parameter(parameter_b);
                 self.store_value(value, address);
-                println!("MUL {} {}; storing {} at {}", parameter_a, parameter_b, value, address);
                 self.instruction_pointer += 4;
             },
             Instruction::Inp(address) => {
@@ -173,14 +199,46 @@ impl IntcodeComputer {
                     |error| IntcodeComputerError::new(String::from(format!("IO error: input buffer: {}", error)))
                 )?;
                 self.store_value(value, address);
-                println!("INP Storing {} at {}", value, address);
                 self.instruction_pointer += 2;
             },
             Instruction::Out(parameter) => {
                 let value = self.load_parameter(parameter);
                 self.output_buffer.push_front(value.to_string());
-                println!("OUT {}; outputing {}", parameter, value);
                 self.instruction_pointer += 2;
+            },
+            Instruction::Jit(parameter, address) => {
+                let value = self.load_parameter(parameter);
+                let jump_address = self.load_parameter(address);
+                if value != 0 {
+                    self.instruction_pointer = jump_address as usize;
+                } else {
+                    self.instruction_pointer += 3;
+                }
+            },
+            Instruction::Jif(parameter, address) => {
+                let value = self.load_parameter(parameter);
+                let jump_address = self.load_parameter(address);
+                if value == 0 {
+                    self.instruction_pointer = jump_address as usize;
+                } else {
+                    self.instruction_pointer += 3;
+                }
+            },
+            Instruction::Lst(parameter_a, parameter_b, address) => {
+                let value = match  self.load_parameter(parameter_a) < self.load_parameter(parameter_b) {
+                    true => 1,
+                    false => 0,
+                };
+                self.store_value(value, address);
+                self.instruction_pointer += 4;
+            },
+            Instruction::Eqs(parameter_a, parameter_b, address) => {
+                let value = match  self.load_parameter(parameter_a) == self.load_parameter(parameter_b) {
+                    true => 1,
+                    false => 0,
+                };
+                self.store_value(value, address);
+                self.instruction_pointer += 4;
             },
         };
         Ok(())

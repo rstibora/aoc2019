@@ -29,7 +29,7 @@ impl AdventOfCodeCalendar for Calendar2019 {
             2 => (day_02::first_star(&input), day_02::second_star(&input)),
             3 => (day_03::first_star(&input), day_03::second_star(&input)),
             4 => (day_04::first_star(&input), day_04::second_star(&input)),
-            5 => (day_05::first_star(&input), Err(AocError::new(String::from("Not implemented")))),
+            5 => (day_05::first_star(&input), day_05::second_star(&input)),
             _ => {
                 let message = format!("Day {} not implemented", day_number);
                 return (Err(AocError::new(message.clone())), Err(AocError::new(message)));
