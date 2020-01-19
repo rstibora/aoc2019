@@ -1,3 +1,5 @@
+use std::{io, fs, ffi::OsStr, path::PathBuf};
+
 use aoc_framework::year2019::{calendar::Calendar2019, configuration};
 use aoc_framework::utils::file_handling;
 
@@ -5,7 +7,7 @@ use aoc_framework::interface::AdventOfCodeCalendar;
 
 fn run_test_for_day(day: u32) {
     let calendar = Calendar2019 {};
-    let inputs_with_results = file_handling::get_test_inputs_with_results_for_day(day, configuration::get_inputs_folder_path()).unwrap();
+    let inputs_with_results = get_test_inputs_with_results_for_day(day, configuration::get_inputs_folder_path()).unwrap();
 
     // TODO: allow to actually run non-default inputs (currently the only input being tested is the one of the original puzzle).
     for input_with_result in inputs_with_results {
@@ -18,6 +20,55 @@ fn run_test_for_day(day: u32) {
         }
     }
 }
+
+pub struct InputWithResult {
+    pub input: String,
+    pub first_star_solution: Option<String>,
+    pub second_star_solution: Option<String>,
+}
+
+fn get_test_inputs_with_results_for_day(day_number: u32, folder: &str) -> Result<Vec<InputWithResult>, io::Error> {
+    let mut inputs = Vec::new();
+    for mut file_path in list_test_input_file_names(day_number, folder)? {
+        file_path.set_extension(file_handling::get_input_extension());
+        let input = fs::read_to_string(&file_path)?;
+
+        file_path.set_extension(get_test_result_suffix());
+        let results = fs::read_to_string(&file_path)?;
+
+        let mut results = results.lines().map(str::to_string);
+        let first_star_solution = results.next();
+        let second_star_solution = results.next();
+
+        inputs.push(InputWithResult { input, first_star_solution, second_star_solution });
+    }
+    Ok(inputs)
+}
+
+fn list_test_input_file_names(day_number: u32, folder: &str) -> Result<Vec<PathBuf>, io::Error> {
+    let mut filenames = Vec::new();
+
+    for item in fs::read_dir(folder)? {
+        let path = item?.path();
+
+        // Check that the current item is a file with the proper name and suffix (expected result file).
+        let is_correct_day = path.file_name().and_then(OsStr::to_str).map(|x| {x.contains(&file_handling::get_input_filename(day_number))}).unwrap_or(false);
+        let has_correct_extension = path.extension().and_then(OsStr::to_str).map(|x| { x == get_test_result_suffix() }).unwrap_or(false);
+        if !is_correct_day || !has_correct_extension {
+            continue;
+        }
+
+        let mut input_path = path.clone();
+        input_path.set_extension("");
+        filenames.push(input_path);
+    }
+    Ok(filenames)
+}
+
+pub fn get_test_result_suffix() -> String {
+    String::from("result")
+}
+
 
 #[test]
 fn day_one() {
