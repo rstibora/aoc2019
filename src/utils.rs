@@ -1,5 +1,5 @@
 pub mod file_handling {
-    use std::{io, env, fs, path::PathBuf, ffi::OsStr};
+    use std::{io, fs, path::PathBuf, ffi::OsStr};
 
     pub fn get_input_filename(day_number: u32) -> String {
         format!("day_{:0>2}", day_number)
