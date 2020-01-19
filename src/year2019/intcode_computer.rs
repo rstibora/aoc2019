@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::fmt;
 
 use crate::aoc_error::AocError;
@@ -45,7 +45,7 @@ impl fmt::Display for Parameter {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Parameter::PositionMode(address) => write!(f, "PositionMode({})", address),
-            Parameter::ImmediateMode(value) => write!(f, "ImmediateMOde({})", value),
+            Parameter::ImmediateMode(value) => write!(f, "ImmediateMode({})", value),
         }
     }
 }
@@ -55,16 +55,22 @@ enum Instruction {
     Halt,
     Add(Parameter, Parameter, Address),
     Mul(Parameter, Parameter, Address),
+    Inp(Address),
+    Out(Parameter),
 }
 
 pub struct IntcodeComputer {
     instruction_pointer: usize,
     program: Program,
+    // TODO: hide behind an interface.
+    pub input_buffer: VecDeque<String>,
+    pub output_buffer: VecDeque<String>,
 }
 
 impl IntcodeComputer {
     pub fn new() -> IntcodeComputer {
-        IntcodeComputer { instruction_pointer: 0, program: vec![99] }
+        IntcodeComputer { instruction_pointer: 0, program: vec![99],
+                          input_buffer: VecDeque::new(), output_buffer: VecDeque::new() }
     }
 
     pub fn load_program(&mut self, program: Program) {
@@ -73,6 +79,8 @@ impl IntcodeComputer {
 
     pub fn restart(&mut self) {
         self.instruction_pointer = 0;
+        self.input_buffer = VecDeque::new();
+        self.output_buffer = VecDeque::new();
     }
 
     pub fn run(&mut self, input: Input) -> Result<RegisterType, IntcodeComputerError> {
@@ -98,7 +106,11 @@ impl IntcodeComputer {
             |error| IntcodeComputerError::new(String::from(format!("Could not parse opcode: {}", error))))?;
         let parameter_modes = match opcode.len() {
             0..=2 => Vec::new(),
-            non_default_modes => opcode[..non_default_modes - 2].chars().collect::<Vec<char>>(),
+            non_default_modes => {
+                let mut parameter_modes = opcode[..non_default_modes - 2].chars().collect::<Vec<char>>();
+                parameter_modes.reverse();
+                parameter_modes
+            }
         };
 
         match instruction_code {
@@ -116,6 +128,14 @@ impl IntcodeComputer {
                 let second_parameter = self.parse_parameter(2, &parameter_modes)?;
                 let result_address = self.program[self.instruction_pointer + 3];
                 Ok(Instruction::Mul(first_parameter, second_parameter, result_address))
+            },
+            3 => {
+                let result_address = self.program[self.instruction_pointer + 1];
+                Ok(Instruction::Inp(result_address))
+            },
+            4 => {
+                let parameter = self.parse_parameter(1, &parameter_modes)?;
+                Ok(Instruction::Out(parameter))
             },
             unknown_opcode => Err(IntcodeComputerError::new(String::from(format!("Unknown opcode {}", unknown_opcode))))
         }
@@ -136,12 +156,31 @@ impl IntcodeComputer {
             Instruction::Add(parameter_a, parameter_b, address) => {
                 let value = self.load_parameter(parameter_a) + self.load_parameter(parameter_b);
                 self.store_value(value, address);
+                println!("ADD {} {}; storing {} at {}", parameter_a, parameter_b, value, address);
                 self.instruction_pointer += 4;
             },
             Instruction::Mul(parameter_a, parameter_b, address) => {
                 let value = self.load_parameter(parameter_a) * self.load_parameter(parameter_b);
                 self.store_value(value, address);
+                println!("MUL {} {}; storing {} at {}", parameter_a, parameter_b, value, address);
                 self.instruction_pointer += 4;
+            },
+            Instruction::Inp(address) => {
+                let value = self.input_buffer.pop_back().ok_or(
+                    IntcodeComputerError::new(String::from("IO error: reading empty input buffer"))
+                )?;
+                let value = value.parse::<RegisterType>().map_err(
+                    |error| IntcodeComputerError::new(String::from(format!("IO error: input buffer: {}", error)))
+                )?;
+                self.store_value(value, address);
+                println!("INP Storing {} at {}", value, address);
+                self.instruction_pointer += 2;
+            },
+            Instruction::Out(parameter) => {
+                let value = self.load_parameter(parameter);
+                self.output_buffer.push_front(value.to_string());
+                println!("OUT {}; outputing {}", parameter, value);
+                self.instruction_pointer += 2;
             },
         };
         Ok(())

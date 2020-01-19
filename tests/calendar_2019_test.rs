@@ -38,3 +38,8 @@ fn day_three() {
 fn day_four() {
     run_test_for_day(4);
 }
+
+#[test]
+fn day_five() {
+    run_test_for_day(5);
+}
