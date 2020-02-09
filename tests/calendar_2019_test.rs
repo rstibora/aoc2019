@@ -94,3 +94,8 @@ fn day_four() {
 fn day_five() {
     run_test_for_day(5);
 }
+
+#[test]
+fn day_six() {
+    run_test_for_day(6);
+}
