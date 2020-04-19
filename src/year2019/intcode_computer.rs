@@ -67,8 +67,8 @@ pub struct IntcodeComputer {
     instruction_pointer: usize,
     program: Program,
     // TODO: hide behind an interface.
-    pub input_buffer: VecDeque<String>,
-    pub output_buffer: VecDeque<String>,
+    pub input_buffer: VecDeque<RegisterType>,
+    pub output_buffer: VecDeque<RegisterType>,
 }
 
 impl IntcodeComputer {
@@ -195,15 +195,12 @@ impl IntcodeComputer {
                 let value = self.input_buffer.pop_back().ok_or(
                     IntcodeComputerError::new(String::from("IO error: reading empty input buffer"))
                 )?;
-                let value = value.parse::<RegisterType>().map_err(
-                    |error| IntcodeComputerError::new(String::from(format!("IO error: input buffer: {}", error)))
-                )?;
                 self.store_value(value, address);
                 self.instruction_pointer += 2;
             },
             Instruction::Out(parameter) => {
                 let value = self.load_parameter(parameter);
-                self.output_buffer.push_front(value.to_string());
+                self.output_buffer.push_front(value);
                 self.instruction_pointer += 2;
             },
             Instruction::Jit(parameter, address) => {

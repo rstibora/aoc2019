@@ -8,7 +8,7 @@ pub fn first_star(input: &str) -> AocResult {
     let mut computer = IntcodeComputer::new();
     computer.load_program(program);
 
-    computer.input_buffer.push_front(String::from("1"));
+    computer.input_buffer.push_front(1);
 
     computer.run(Input::new())?;
     let output = computer.output_buffer.front().ok_or(AocError::new(String::from("No output in the buffer")))?;
@@ -22,7 +22,7 @@ pub fn second_star(input: &str) -> AocResult {
     let mut computer = IntcodeComputer::new();
     computer.load_program(program);
 
-    computer.input_buffer.push_front(String::from("5"));
+    computer.input_buffer.push_front(5);
 
     computer.run(Input::new())?;
     let output = computer.output_buffer.front().ok_or(AocError::new(String::from("No output in the buffer")))?;
