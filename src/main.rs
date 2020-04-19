@@ -8,7 +8,7 @@ use interface::AdventOfCodeCalendar;
 fn main() {
     // TODO: get rid of unwrap and expect calls (do proper error handling).
     // TODO: pass proper slice types instead of Vectors.
-    let day = 6;
+    let day = 7;
     let calendar = year2019::calendar::Calendar2019::new();
     let (first_star, second_star) = calendar.run_day(day);
     let first_star = first_star.unwrap_or_else(|error| error.to_string());
