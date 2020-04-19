@@ -1,8 +1,12 @@
 use std::collections::HashMap;
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
 use crate::aoc_error::{AocResult, AocError};
+
+const COM: &str = "COM";
+const YOU: &str = "YOU";
+const SAN: &str = "SAN";
 
 pub fn first_star(input: &str) -> AocResult {
     let orbits = parse_orbits(input)?;
@@ -20,16 +24,24 @@ pub fn second_star(input: &str) -> AocResult {
     let orbits = parse_orbits(input)?;
     let nodes = construct_orbit_tree(orbits)?;
 
-    let path_to_me = dfs(&nodes, "COM", "YOU")?.ok_or(AocError::new(String::from("Could not find 'YOU' in the orbit map")))?;
-    let path_to_santa = dfs(&nodes, "COM", "SAN")?.ok_or(AocError::new(String::from("Could not find 'SAN' in the orbit map")))?;
-    let common_path = trim_common_path(path_to_me, path_to_santa);
+    let path_to_me = dfs(&nodes, COM, YOU)?.ok_or(AocError::new(String::from("Could not find 'YOU' in the orbit map")))?;
+    let path_to_santa = dfs(&nodes, COM, SAN)?.ok_or(AocError::new(String::from("Could not find 'SAN' in the orbit map")))?;
+    let common_path = dfs_paths_to_orbit_path(path_to_me, path_to_santa);
     Ok((common_path.len() - 3).to_string())
 }
 
+/// Depth-first search of the orbit tree. Returns a path from the `source_node` to the `target_node`
+///
+/// # Arguments
+///
+/// * `nodes` Node dictionary
+/// * `source_node` Name of the node from which the dfs search should begin
+/// * `target_node` Name of the node that shall be found
+///
 fn dfs(nodes: &HashMap<String, Rc<RefCell<OrbitNode>>>, source_node: &str, target_node: &str) -> Result<Option<Vec<String>>, AocError> {
     let mut stack: Vec<String> = Vec::new();
 
-    // TODO: ?
+    // Check that the source_node is in the orbit tree.
     if let Some(node) = nodes.get(source_node) {
         stack.push(node.borrow().name.clone());
     }
@@ -37,11 +49,12 @@ fn dfs(nodes: &HashMap<String, Rc<RefCell<OrbitNode>>>, source_node: &str, targe
     while let Some(stack_top_node_name) = stack.pop() {
         let stack_top_node = nodes.get(&stack_top_node_name).ok_or(AocError::new(String::from("Could not get current node")))?.borrow();
 
+        // The target node has been found. Construct a path from the source to the target.
         if stack_top_node_name == target_node {
             let mut path: Vec<String> = vec!();
             let mut current_node_name = stack_top_node_name.clone();
 
-            while current_node_name != "COM" {
+            while current_node_name != COM {
                 path.push(current_node_name.clone());
                 let current_node = nodes.get(&current_node_name).ok_or(AocError::new(String::from("Could not get current node")))?.borrow();
                 let parent_orbit = current_node.parent_orbit.as_ref().ok_or(AocError::new(String::from("Could not get parent node")))?.upgrade()
@@ -59,19 +72,29 @@ fn dfs(nodes: &HashMap<String, Rc<RefCell<OrbitNode>>>, source_node: &str, targe
     Ok(None)
 }
 
-fn trim_common_path(path_a: Vec<String>, path_b: Vec<String>) -> Vec<String> {
+/// Compose a path from a source node to a target node based on two paths: one from a common source to the source node and the other
+/// from a common source to the target node.
+///
+/// E.g. [A, B, C, D] and [B, C, E, F] will yield [D, C, E, F].
+///
+/// # Arguments
+///
+/// * `source_segment` Path to the source node. Should have a common part with the `target_segment`
+/// * `target_segment` path to the target node. Should have a common part with the `source_segment`
+///
+fn dfs_paths_to_orbit_path(source_segment: Vec<String>, target_segment: Vec<String>) -> Vec<String> {
     let mut result = vec!();
 
     let mut index = 0;
-    while index < path_a.len() && index < path_b.len() && path_a[index] == path_b[index] {
+    while index < source_segment.len() && index < target_segment.len() && source_segment[index] == target_segment[index] {
         index += 1;
     }
 
-    result.extend(path_a[index..path_a.len()].iter().rev().cloned());
+    result.extend(source_segment[index..source_segment.len()].iter().rev().cloned());
     if index != 0 {
-        result.push(path_a[index - 1].clone());
+        result.push(source_segment[index - 1].clone());
     }
-    result.extend(path_b[index..path_b.len()].iter().cloned());
+    result.extend(target_segment[index..target_segment.len()].iter().cloned());
     result
 }
 
