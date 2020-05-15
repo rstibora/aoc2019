@@ -10,7 +10,7 @@ fn main() {
     // TODO: pass proper slice types instead of Vectors.
     let day = 7;
     let calendar = year2019::calendar::Calendar2019::new();
-    let (first_star, second_star) = calendar.run_day(day);
+    let (first_star, second_star) = calendar.run_day(day, None);
     let first_star = first_star.unwrap_or_else(|error| error.to_string());
     let second_star = second_star.unwrap_or_else(|error| error.to_string());
     println!("Day {}: first star result: {}, second star result: {}", day, first_star, second_star);

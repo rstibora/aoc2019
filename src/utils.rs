@@ -1,16 +1,17 @@
 pub mod file_handling {
     use std::{io, fs, path::PathBuf};
 
-    pub fn get_input_filename(day_number: u32) -> String {
-        format!("day_{:0>2}", day_number)
+    pub fn get_input_filename(day_number: u32, filename_suffix: Option<&str>) -> String {
+        let suffix = filename_suffix.unwrap_or("").to_owned();
+        format!("day_{:0>2}{}", day_number, suffix)
     }
 
     pub fn get_input_extension() -> String {
         String::from("input")
     }
 
-    pub fn get_input_for_day(day_number: u32, folder: &str) -> Result<String, io::Error> {
-        let path = get_whole_file_path(folder, &get_input_filename(day_number), &get_input_extension());
+    pub fn get_input_for_day(day_number: u32, filename_suffix: Option<&str>, folder: &str) -> Result<String, io::Error> {
+        let path = get_whole_file_path(folder, &get_input_filename(day_number, filename_suffix), &get_input_extension());
         fs::read_to_string(path)
     }
 

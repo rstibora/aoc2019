@@ -9,14 +9,13 @@ fn run_test_for_day(day: u32) {
     let calendar = Calendar2019 {};
     let inputs_with_results = get_test_inputs_with_results_for_day(day, configuration::get_inputs_folder_path()).unwrap();
 
-    // TODO: allow to actually run non-default inputs (currently the only input being tested is the one of the original puzzle).
     for input_with_result in inputs_with_results {
         if let Some(solution) = input_with_result.first_star_solution {
-            assert_eq!(solution, calendar.run_day(day).0.unwrap());
+            assert_eq!(solution, calendar.run_day(day, Some(&input_with_result.input)).0.unwrap());
         }
 
         if let Some(solution) = input_with_result.second_star_solution {
-            assert_eq!(solution, calendar.run_day(day).1.unwrap());
+            assert_eq!(solution, calendar.run_day(day, Some(&input_with_result.input)).1.unwrap());
         }
     }
 }
@@ -37,7 +36,12 @@ fn get_test_inputs_with_results_for_day(day_number: u32, folder: &str) -> Result
         let results = fs::read_to_string(&file_path)?;
 
         let mut results = results.lines().map(str::to_string);
-        let first_star_solution = results.next();
+        // Allow to have solutions only for the second star.
+        let first_star_solution = match results.next() {
+            Some(empty) if empty == String::from("") => None,
+            None => None,
+            Some(non_empty) => Some(non_empty),
+        };
         let second_star_solution = results.next();
 
         inputs.push(InputWithResult { input, first_star_solution, second_star_solution });
@@ -52,7 +56,7 @@ fn list_test_input_file_names(day_number: u32, folder: &str) -> Result<Vec<PathB
         let path = item?.path();
 
         // Check that the current item is a file with the proper name and suffix (expected result file).
-        let is_correct_day = path.file_name().and_then(OsStr::to_str).map(|x| {x.contains(&file_handling::get_input_filename(day_number))}).unwrap_or(false);
+        let is_correct_day = path.file_name().and_then(OsStr::to_str).map(|x| {x.contains(&file_handling::get_input_filename(day_number, None))}).unwrap_or(false);
         let has_correct_extension = path.extension().and_then(OsStr::to_str).map(|x| { x == get_test_result_suffix() }).unwrap_or(false);
         if !is_correct_day || !has_correct_extension {
             continue;
