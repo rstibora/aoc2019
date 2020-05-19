@@ -42,3 +42,19 @@ fn fuel_for_mass_recursive(mass: i32) -> i32 {
 fn fuel_for_mass(mass: i32) -> i32 {
     max((mass as f64 / 3.) as i32 - 2, 0)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_fuel_for_mass() {
+        assert_eq!(fuel_for_mass(0), 0);
+        assert_eq!(fuel_for_mass(100), 31);
+    }
+
+    #[test]
+    fn test_fuel_for_mass_recursive() {
+        assert_eq!(fuel_for_mass_recursive(0), 0);
+        assert_eq!(fuel_for_mass_recursive(100), 39);
+    }
+}
