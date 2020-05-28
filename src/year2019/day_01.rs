@@ -1,32 +1,34 @@
 use std::cmp::max;
 
 use crate::aoc_error::{AocError, AocResult};
-use crate::utils;
+use crate::utils::{input_conversion, performance::Cached};
 
 pub fn first_star(input: &str) -> AocResult {
     // TODO: ugly, fix.
-    let input = match utils::input_conversion::input_to_lines(input) {
+    let input = match input_conversion::input_to_lines(input) {
         Ok(input) => input,
         Err(_) => return Err(AocError::new(String::from("Could not convert to lines")))
     };
     let mut total_fuel_for_mass = 0;
+    let mut cached_fuel_for_mass = Cached::new(fuel_for_mass);
 
     for item in input {
-        total_fuel_for_mass += fuel_for_mass(item);
+        total_fuel_for_mass += cached_fuel_for_mass.calculate(item);
     }
     Ok(total_fuel_for_mass.to_string())
 }
 
 pub fn second_star(input: &str) -> AocResult {
     // TODO: ugly, fix.
-    let input = match utils::input_conversion::input_to_lines(input) {
+    let input = match input_conversion::input_to_lines(input) {
         Ok(input) => input,
         Err(_) => return Err(AocError::new(String::from("Could not convert to lines")))
     };
     let mut total_fuel_for_mass = 0;
+    let mut cached_fuel_for_mass_recursive = Cached::new(fuel_for_mass_recursive);
 
     for item in input {
-        total_fuel_for_mass += fuel_for_mass_recursive(item);
+        total_fuel_for_mass += cached_fuel_for_mass_recursive.calculate(item);
     }
     Ok(total_fuel_for_mass.to_string())
 }

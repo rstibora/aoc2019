@@ -35,3 +35,27 @@ pub mod input_conversion {
         Ok(lines)
     }
 }
+
+pub mod performance {
+    use std::collections::HashMap;
+    pub struct Cached<T, U, V>
+    where T: Fn(U) -> V,
+    {
+        calculation: T,
+        cache: HashMap<U, V>,
+    }
+
+    impl<T, U, V> Cached<T, U, V>
+    where T: Fn(U) -> V,
+          U: std::cmp::Eq, U: std::hash::Hash, U: std::clone::Clone,
+    {
+        pub fn new(calculation: T) -> Cached<T, U, V> {
+            Cached { calculation, cache: HashMap::new() }
+        }
+
+        pub fn calculate(&mut self, argument: U) -> &V {
+            self.cache.entry(argument.clone()).or_insert((self.calculation)(argument))
+        }
+    }
+
+}
