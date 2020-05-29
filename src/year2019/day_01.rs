@@ -9,12 +9,10 @@ pub fn first_star(input: &str) -> AocResult {
         Ok(input) => input,
         Err(_) => return Err(AocError::new(String::from("Could not convert to lines")))
     };
-    let mut total_fuel_for_mass = 0;
     let mut cached_fuel_for_mass = Cached::new(fuel_for_mass);
-
-    for item in input {
-        total_fuel_for_mass += cached_fuel_for_mass.calculate(item);
-    }
+    let total_fuel_for_mass: i32 = input.into_iter()
+                                    .map(|mass| cached_fuel_for_mass.calculate(mass).clone())
+                                    .sum();
     Ok(total_fuel_for_mass.to_string())
 }
 
@@ -24,12 +22,10 @@ pub fn second_star(input: &str) -> AocResult {
         Ok(input) => input,
         Err(_) => return Err(AocError::new(String::from("Could not convert to lines")))
     };
-    let mut total_fuel_for_mass = 0;
     let mut cached_fuel_for_mass_recursive = Cached::new(fuel_for_mass_recursive);
-
-    for item in input {
-        total_fuel_for_mass += cached_fuel_for_mass_recursive.calculate(item);
-    }
+    let total_fuel_for_mass: i32 = input.into_iter()
+                                    .map(|mass| cached_fuel_for_mass_recursive.calculate(mass).clone())
+                                    .sum();
     Ok(total_fuel_for_mass.to_string())
 }
 
