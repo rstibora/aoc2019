@@ -1,18 +1,16 @@
 use crate::aoc_error::{AocResult, AocError};
-use super::intcode_computer::{IntcodeComputer, Input, utils};
+use super::intcode_computer::{IntcodeComputer, utils};
 
 pub fn first_star(input: &str) -> AocResult {
     // Input is a single line of numbers.
     let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
-    let program = utils::parse_intcode_program(input)?;
-    let mut computer = IntcodeComputer::new();
-    computer.load_program(program);
+    let mut program = utils::parse_intcode_program(input)?;
+    let mut computer = IntcodeComputer::new(None, None);
+    program[1] = 12;
+    program[2] = 2;
 
-    let mut input = Input::new();
-    input.insert(1, 12);
-    input.insert(2, 2);
-
-    let output = computer.run(input)?;
+    computer.start(program)?;
+    let output = computer.wait_for_result()?;
     Ok(output.to_string())
 }
 
@@ -20,18 +18,16 @@ pub fn second_star(input: &str) -> AocResult {
     const EXPECTED_VALUE: i32 = 19690720;
 
     let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
-    let program = utils::parse_intcode_program(input)?;
-    let mut computer = IntcodeComputer::new();
-    computer.load_program(program.clone());
+    let mut program = utils::parse_intcode_program(input)?;
 
     for noun in 0..99 {
+        program[1] = noun;
         for verb in 0..99 {
-            let mut input = Input::new();
-            input.insert(1, noun);
-            input.insert(2, verb);
-            computer.restart();
-            computer.load_program(program.clone());
-            if computer.run(input)? == EXPECTED_VALUE {
+            program[2] = verb;
+            let mut computer = IntcodeComputer::new(None, None);
+            computer.start(program.clone())?;
+            let output = computer.wait_for_result()?;
+            if output == EXPECTED_VALUE {
                 return Ok((100 * noun + verb).to_string());
             }
         }
