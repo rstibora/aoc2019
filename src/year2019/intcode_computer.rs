@@ -1,5 +1,5 @@
 use std::{fmt, thread};
-use std::sync::mpsc;
+use std::sync::{Arc, Barrier, mpsc};
 
 use crate::aoc_error::AocError;
 
@@ -62,78 +62,29 @@ enum Instruction {
     Eqs(Parameter, Parameter, Address),
 }
 
-pub struct IntcodeComputerBus {
-    rx: Option<mpsc::Receiver<RegisterType>>,
-    sx: Option<mpsc::Sender<RegisterType>>,
-}
-
-impl IntcodeComputerBus {
-    pub fn new() -> Self {
-        IntcodeComputerBus { rx: None, sx: None }
-    }
-
-    pub fn get_input(&mut self) -> Result<mpsc::Sender<RegisterType>, IntcodeComputerError> {
-        match std::mem::replace(&mut self.sx, None) {
-            None => {
-                if self.rx.is_none() {
-                    let (sx, rx) = mpsc::channel();
-                    self.rx = Some(rx);
-                    Ok(sx)
-                } else {
-                    Err(IntcodeComputerError::new(String::from("Bus input already in use")))
-                }
-            },
-            Some(sx) => {
-                Ok(sx)
-            }
-        }
-    }
-
-    pub fn get_output(&mut self) -> Result<mpsc::Receiver<RegisterType>, IntcodeComputerError> {
-        match std::mem::replace(&mut self.rx, None) {
-            None => {
-                if self.sx.is_none() {
-                    let (sx, rx) = mpsc::channel();
-                    self.sx = Some(sx);
-                    Ok(rx)
-                } else {
-                    Err(IntcodeComputerError::new(String::from("Bus output already in use")))
-                }
-            },
-            Some(rx) => {
-                Ok(rx)
-            }
-        }
-    }
-}
-
-pub struct IntcodeComputer<'a> {
+pub struct IntcodeComputer {
     thread_handle: Option<thread::JoinHandle<Result<RegisterType, IntcodeComputerError>>>,
-    input_bus: Option<&'a mut IntcodeComputerBus>,
-    output_bus: Option<&'a mut IntcodeComputerBus>,
+    finish_barrier: Option<Arc<Barrier>>,
 }
 
-impl<'a> IntcodeComputer<'a> {
-    pub fn new(input_bus: Option<&'a mut IntcodeComputerBus>, output_bus: Option<&'a mut IntcodeComputerBus>) -> Self {
-        IntcodeComputer { thread_handle: None, input_bus, output_bus }
+impl IntcodeComputer {
+    pub fn new(finish_barrier: Option<Arc<Barrier>>) -> Self {
+        IntcodeComputer { thread_handle: None, finish_barrier }
     }
 
-    pub fn start(&mut self, program: Program) -> Result<(), IntcodeComputerError> {
+    pub fn start(&mut self, program: Program, input_bus: Option<mpsc::Receiver<RegisterType>>,
+                 output_buses: Vec<mpsc::Sender<RegisterType>>) -> Result<(), IntcodeComputerError> {
         if self.thread_handle.is_some() {
             return Err(IntcodeComputerError::new(String::from("Computer already running")));
         };
 
-        let input = match &mut self.input_bus {
+        let barrier = match &self.finish_barrier {
+            Some(barrier) => Some(Arc::clone(barrier)),
             None => None,
-            Some(bus) => Some(bus.get_output()?),
-        };
-        let output = match &mut self.output_bus {
-            None => None,
-            Some(bus) => Some(bus.get_input()?),
         };
         self.thread_handle = Some(thread::spawn(move|| {
             let mut hardware = IntcodeHardware::new();
-            hardware.run(program, input, output)
+            hardware.run(program, input_bus, output_buses, barrier)
         }));
         Ok(())
     }
@@ -157,18 +108,18 @@ pub struct IntcodeHardware {
     memory: Program,
     ip: usize,
     input: Option<mpsc::Receiver<RegisterType>>,
-    output: Option<mpsc::Sender<RegisterType>>,
+    outputs: Vec<mpsc::Sender<RegisterType>>,
 }
 
 impl IntcodeHardware {
     pub fn new() -> Self {
-        IntcodeHardware { memory: vec![99], ip: 0, input: None, output: None }
+        IntcodeHardware { memory: vec![99], ip: 0, input: None, outputs: vec![] }
     }
 
     pub fn run(&mut self, program: Program, input: Option<mpsc::Receiver<RegisterType>>,
-               output: Option<mpsc::Sender<RegisterType>>) -> Result<RegisterType, IntcodeComputerError> {
+               outputs: Vec<mpsc::Sender<RegisterType>>, finish_barrier: Option<Arc<Barrier>>) -> Result<RegisterType, IntcodeComputerError> {
         self.input = input;
-        self.output = output;
+        self.outputs = outputs;
         self.memory = program;
 
         let mut instruction = self.parse_instruction()?;
@@ -176,6 +127,12 @@ impl IntcodeHardware {
             self.execute_instruction(&instruction)?;
             instruction = self.parse_instruction()?;
         }
+
+        // Wait in case of cooperative computation so that the mpsc::Channel is not droppped prematurely.
+        if let Some(barrier) = &finish_barrier {
+            barrier.wait();
+        }
+
         Ok(self.memory[0])
     }
 
@@ -272,7 +229,9 @@ impl IntcodeHardware {
             },
             Instruction::Inp(address) => {
                 let value = match &self.input {
-                    Some(input) => input.recv().map_err(|mpsc_error| IntcodeComputerError::new(String::from("Could not read from the channel")))?,
+                    Some(input) => input.recv()
+                        .map_err(|mpsc_error| IntcodeComputerError::new(
+                            String::from(format!("Could not read from the channel: {}", mpsc_error))))?,
                     None => return Err(IntcodeComputerError::new(String::from("Input not available"))),
                 };
                 self.store_value(value, address);
@@ -280,9 +239,10 @@ impl IntcodeHardware {
             },
             Instruction::Out(parameter) => {
                 let value = self.load_parameter(parameter);
-                match &self.output {
-                    Some(output) => output.send(value).map_err(|mpsc_error| IntcodeComputerError::new(String::from("Could not send a value to the channel")))?,
-                    None => return Err(IntcodeComputerError::new(String::from("Output not available"))),
+                for output in &self.outputs {
+                    output.send(value)
+                        .map_err(|mpsc_error| IntcodeComputerError::new(
+                            String::from(format!("Could not send a value to the channel: {}", mpsc_error))))?;
                 }
                 self.ip += 2;
             },
