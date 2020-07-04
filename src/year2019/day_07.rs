@@ -41,7 +41,7 @@ pub fn first_star(input: &str) -> AocResult {
         // Shift senders back by one, so that the sending computer is the one before the receiving.
         senders.rotate_left(1);
 
-        let mut sx_rx: Vec<(mpsc::Sender<i32>, mpsc::Receiver<i32>)> = senders.drain(..).zip(receivers.drain(..)).rev().collect();
+        let mut sx_rx: Vec<(mpsc::Sender<i64>, mpsc::Receiver<i64>)> = senders.drain(..).zip(receivers.drain(..)).rev().collect();
         for i in 0..4 {
             let (sender, receiver) = sx_rx.pop().unwrap();
             amp_computers[i].start(program.clone(), Some(receiver), vec![sender])?;
@@ -96,7 +96,7 @@ pub fn second_star(input: &str) -> AocResult {
         // Shift senders back by one, so that the sending computer is the one before the receiving.
         senders.rotate_left(1);
 
-        let mut sx_rx: Vec<(mpsc::Sender<i32>, mpsc::Receiver<i32>)> = senders.drain(..).zip(receivers.drain(..)).rev().collect();
+        let mut sx_rx: Vec<(mpsc::Sender<i64>, mpsc::Receiver<i64>)> = senders.drain(..).zip(receivers.drain(..)).rev().collect();
         for i in 0..4 {
             let (sender, receiver) = sx_rx.pop().unwrap();
             amp_computers[i].start(program.clone(), Some(receiver), vec![sender])?;

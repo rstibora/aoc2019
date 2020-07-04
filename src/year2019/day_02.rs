@@ -15,7 +15,7 @@ pub fn first_star(input: &str) -> AocResult {
 }
 
 pub fn second_star(input: &str) -> AocResult {
-    const EXPECTED_VALUE: i32 = 19690720;
+    const EXPECTED_VALUE: i64 = 19690720;
 
     let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
     let mut program = utils::parse_intcode_program(input)?;

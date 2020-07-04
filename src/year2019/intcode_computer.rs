@@ -4,7 +4,7 @@ use std::sync::{Arc, Barrier, mpsc};
 use crate::aoc_error::AocError;
 
 // TODO: make the computer generic with respect to the register type.
-type RegisterType = i32;
+type RegisterType = i64;
 pub type Program = Vec<RegisterType>;
 
 #[derive(Debug)]
@@ -31,13 +31,14 @@ impl From<IntcodeComputerError> for AocError {
     }
 }
 
-type Address = i32;
-type Value = i32;
+type Address = RegisterType;
+type Value = RegisterType;
 
 #[derive(PartialEq)]
 enum Parameter {
     PositionMode(Address),
     ImmediateMode(Value),
+    RelativeMode(Value),
 }
 
 impl fmt::Display for Parameter {
@@ -45,6 +46,7 @@ impl fmt::Display for Parameter {
         match self {
             Parameter::PositionMode(address) => write!(f, "PositionMode({})", address),
             Parameter::ImmediateMode(value) => write!(f, "ImmediateMode({})", value),
+            Parameter::RelativeMode(value) => write!(f, "RelativeMode({})", value),
         }
     }
 }
@@ -60,6 +62,7 @@ enum Instruction {
     Jif(Parameter, Parameter),
     Lst(Parameter, Parameter, Address),
     Eqs(Parameter, Parameter, Address),
+    Rbo(Parameter),
 }
 
 pub struct IntcodeComputer {
@@ -107,13 +110,14 @@ impl IntcodeComputer {
 pub struct IntcodeHardware {
     memory: Program,
     ip: usize,
+    relative_base: RegisterType,
     input: Option<mpsc::Receiver<RegisterType>>,
     outputs: Vec<mpsc::Sender<RegisterType>>,
 }
 
 impl IntcodeHardware {
     pub fn new() -> Self {
-        IntcodeHardware { memory: vec![99], ip: 0, input: None, outputs: vec![] }
+        IntcodeHardware { memory: vec![99], ip: 0, relative_base: 0, input: None, outputs: vec![] }
     }
 
     pub fn run(&mut self, program: Program, input: Option<mpsc::Receiver<RegisterType>>,
@@ -160,17 +164,17 @@ impl IntcodeHardware {
             1 => {
                 let first_parameter = self.parse_parameter(1, &parameter_modes)?;
                 let second_parameter = self.parse_parameter(2, &parameter_modes)?;
-                let result_address = self.memory[self.ip + 3];
+                let result_address = self.parse_address(3, &parameter_modes)?;
                 Ok(Instruction::Add(first_parameter, second_parameter, result_address))
             },
             2 => {
                 let first_parameter = self.parse_parameter(1, &parameter_modes)?;
                 let second_parameter = self.parse_parameter(2, &parameter_modes)?;
-                let result_address = self.memory[self.ip + 3];
+                let result_address = self.parse_address(3, &parameter_modes)?;
                 Ok(Instruction::Mul(first_parameter, second_parameter, result_address))
             },
             3 => {
-                let result_address = self.memory[self.ip + 1];
+                let result_address = self.parse_address(1, &parameter_modes)?;
                 Ok(Instruction::Inp(result_address))
             },
             4 => {
@@ -190,23 +194,40 @@ impl IntcodeHardware {
             7 => {
                 let first_parameter = self.parse_parameter(1, &parameter_modes)?;
                 let second_parameter = self.parse_parameter(2, &parameter_modes)?;
-                let result_address = self.memory[self.ip + 3];
+                let result_address = self.parse_address(3, &parameter_modes)?;
                 Ok(Instruction::Lst(first_parameter, second_parameter, result_address))
             },
             8 => {
                 let first_parameter = self.parse_parameter(1, &parameter_modes)?;
                 let second_parameter = self.parse_parameter(2, &parameter_modes)?;
-                let result_address = self.memory[self.ip + 3];
+                let result_address = self.parse_address(3, &parameter_modes)?;
                 Ok(Instruction::Eqs(first_parameter, second_parameter, result_address))
+            },
+            9 => {
+                let parameter = self.parse_parameter(1, &parameter_modes)?;
+                Ok(Instruction::Rbo(parameter))
             },
             unknown_opcode => Err(IntcodeComputerError::new(String::from(format!("Unknown opcode {}", unknown_opcode))))
         }
     }
 
     fn parse_parameter(&self, parameter_position: usize, parameter_modes: &Vec<char>) -> Result<Parameter, IntcodeComputerError> {
+        let parameter_address = self.ip + parameter_position;
         match parameter_modes.get(parameter_position - 1).map(|x| char::to_digit(*x, 10)).flatten().unwrap_or(0) {
-            0 => Ok(Parameter::PositionMode(self.memory[self.ip + parameter_position])),
-            1 => Ok(Parameter::ImmediateMode(self.memory[self.ip + parameter_position])),
+            0 => Ok(Parameter::PositionMode(self.memory[parameter_address])),
+            1 => Ok(Parameter::ImmediateMode(self.memory[parameter_address])),
+            2 => Ok(Parameter::RelativeMode(self.memory[parameter_address])),
+            unknown_parameter_mode => Err(IntcodeComputerError::new(
+                String::from(format!("Unknown parameter mode {}", unknown_parameter_mode))))
+        }
+    }
+
+    fn parse_address(&self, parameter_position: usize, parameter_modes: &Vec<char>)  -> Result<Address, IntcodeComputerError> {
+        let parameter_address = self.ip + parameter_position;
+        match parameter_modes.get(parameter_position - 1).map(|x| char::to_digit(*x, 10)).flatten().unwrap_or(0) {
+            0 => Ok(self.memory[parameter_address]),
+            1 => Err(IntcodeComputerError::new(String::from("Output parameter can't be in immediate mode"))),
+            2 => Ok(self.memory[parameter_address] as i64 + self.relative_base),
             unknown_parameter_mode => Err(IntcodeComputerError::new(
                 String::from(format!("Unknown parameter mode {}", unknown_parameter_mode))))
         }
@@ -219,12 +240,12 @@ impl IntcodeHardware {
             }
             Instruction::Add(parameter_a, parameter_b, address) => {
                 let value = self.load_parameter(parameter_a) + self.load_parameter(parameter_b);
-                self.store_value(value, address);
+                self.store_value(value, *address);
                 self.ip += 4;
             },
             Instruction::Mul(parameter_a, parameter_b, address) => {
                 let value = self.load_parameter(parameter_a) * self.load_parameter(parameter_b);
-                self.store_value(value, address);
+                self.store_value(value, *address);
                 self.ip += 4;
             },
             Instruction::Inp(address) => {
@@ -234,7 +255,7 @@ impl IntcodeHardware {
                             String::from(format!("Could not read from the channel: {}", mpsc_error))))?,
                     None => return Err(IntcodeComputerError::new(String::from("Input not available"))),
                 };
-                self.store_value(value, address);
+                self.store_value(value, *address);
                 self.ip += 2;
             },
             Instruction::Out(parameter) => {
@@ -248,18 +269,18 @@ impl IntcodeHardware {
             },
             Instruction::Jit(parameter, address) => {
                 let value = self.load_parameter(parameter);
-                let jump_address = self.load_parameter(address);
+                let address = self.load_parameter(address);
                 if value != 0 {
-                    self.ip = jump_address as usize;
+                    self.ip = address as usize;
                 } else {
                     self.ip += 3;
                 }
             },
             Instruction::Jif(parameter, address) => {
                 let value = self.load_parameter(parameter);
-                let jump_address = self.load_parameter(address);
+                let address = self.load_parameter(address);
                 if value == 0 {
-                    self.ip = jump_address as usize;
+                    self.ip = address as usize;
                 } else {
                     self.ip += 3;
                 }
@@ -269,7 +290,7 @@ impl IntcodeHardware {
                     true => 1,
                     false => 0,
                 };
-                self.store_value(value, address);
+                self.store_value(value, *address);
                 self.ip += 4;
             },
             Instruction::Eqs(parameter_a, parameter_b, address) => {
@@ -277,8 +298,13 @@ impl IntcodeHardware {
                     true => 1,
                     false => 0,
                 };
-                self.store_value(value, address);
+                self.store_value(value, *address);
                 self.ip += 4;
+            },
+            Instruction::Rbo(parameter) => {
+                let value = self.load_parameter(parameter);
+                self.relative_base = self.relative_base + value;
+                self.ip += 2
             },
         };
         Ok(())
@@ -286,13 +312,34 @@ impl IntcodeHardware {
 
     fn load_parameter(&self, parameter: &Parameter) -> RegisterType {
         match parameter {
-            Parameter::ImmediateMode(value) => value.to_owned(),
-            Parameter::PositionMode(address) => self.memory[*address as usize]
+            Parameter::ImmediateMode(value) => {
+                value.to_owned()
+            }
+            Parameter::PositionMode(address) => {
+                let address = *address as usize;
+                if address >= self.memory.len() {
+                    0
+                } else {
+                    self.memory[address]
+                }
+            }
+            Parameter::RelativeMode(value) => {
+                let address = (self.relative_base as RegisterType + value) as usize;
+                if address >= self.memory.len() {
+                    0
+                } else {
+                    self.memory[address]
+                }
+            }
         }
     }
 
-    fn store_value(&mut self, value: RegisterType, address: &Address) {
-        self.memory[*address as usize] = value
+    fn store_value(&mut self, value: RegisterType, address: Address) {
+        let address = address as usize;
+        if address >= self.memory.len() {
+            self.memory.resize(address + 1, 0);
+        }
+        self.memory[address] = value
     }
 }
 

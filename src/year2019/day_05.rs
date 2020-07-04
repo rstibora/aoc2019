@@ -17,7 +17,7 @@ pub fn first_star(input: &str) -> AocResult {
     input_sender.send(1).map_err(|_mpsc_error| AocError::new(String::from("Could not send input")))?;
 
     computer.wait_for_result()?;
-    let output = output_receiver.iter().collect::<Vec<i32>>().pop()
+    let output = output_receiver.iter().collect::<Vec<i64>>().pop()
                     .ok_or(AocError::new(String::from("Output buffer empty")))?;
 
     Ok(output.to_string())
@@ -37,7 +37,7 @@ pub fn second_star(input: &str) -> AocResult {
     input_sender.send(5).map_err(|_mpsc_error| AocError::new(String::from("Could not send input")))?;
 
     computer.wait_for_result()?;
-    let output = output_receiver.iter().collect::<Vec<i32>>().pop()
+    let output = output_receiver.iter().collect::<Vec<i64>>().pop()
                     .ok_or(AocError::new(String::from("Output buffer empty")))?;
 
     Ok(output.to_string())
