@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 permutohedron = "0.2.4"
+num = "0.3.0"
 
 [lib]
 name = "aoc_framework"
