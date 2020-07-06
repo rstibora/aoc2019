@@ -118,3 +118,8 @@ fn day_eight() {
 fn day_nine() {
     run_test_for_day(9);
 }
+
+#[test]
+fn day_ten() {
+    run_test_for_day(10);
+}

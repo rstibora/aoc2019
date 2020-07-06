@@ -97,7 +97,7 @@ impl IntcodeComputer {
             Some(thread_handle) => {
                 let result = match thread_handle.join() {
                     Ok(result) => result,
-                    Err(error) => Err(IntcodeComputerError::new(String::from("Could not join thread")))
+                    Err(_) => Err(IntcodeComputerError::new(String::from("Could not join thread")))
                 };
                 self.thread_handle = None;
                 result
