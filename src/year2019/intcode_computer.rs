@@ -26,8 +26,7 @@ impl IntcodeComputerError {
 
 impl From<IntcodeComputerError> for AocError {
     fn from(error: IntcodeComputerError) -> Self {
-        let message = format!("Intcode Computer: {}", error.to_string());
-        AocError::new(String::from(message))
+        AocError::new(format!("Intcode Computer: {}", error.to_string()))
     }
 }
 
@@ -35,18 +34,18 @@ type Address = RegisterType;
 type Value = RegisterType;
 
 #[derive(PartialEq)]
-enum Parameter {
-    PositionMode(Address),
-    ImmediateMode(Value),
-    RelativeMode(Value),
+enum ParameterMode {
+    Position(Address),
+    Immediate(Value),
+    Relative(Value),
 }
 
-impl fmt::Display for Parameter {
+impl fmt::Display for ParameterMode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Parameter::PositionMode(address) => write!(f, "PositionMode({})", address),
-            Parameter::ImmediateMode(value) => write!(f, "ImmediateMode({})", value),
-            Parameter::RelativeMode(value) => write!(f, "RelativeMode({})", value),
+            ParameterMode::Position(address) => write!(f, "Position({})", address),
+            ParameterMode::Immediate(value) => write!(f, "Immediate({})", value),
+            ParameterMode::Relative(value) => write!(f, "Relative({})", value),
         }
     }
 }
@@ -54,15 +53,15 @@ impl fmt::Display for Parameter {
 #[derive(PartialEq)]
 enum Instruction {
     Halt,
-    Add(Parameter, Parameter, Address),
-    Mul(Parameter, Parameter, Address),
+    Add(ParameterMode, ParameterMode, Address),
+    Mul(ParameterMode, ParameterMode, Address),
     Inp(Address),
-    Out(Parameter),
-    Jit(Parameter, Parameter),
-    Jif(Parameter, Parameter),
-    Lst(Parameter, Parameter, Address),
-    Eqs(Parameter, Parameter, Address),
-    Rbo(Parameter),
+    Out(ParameterMode),
+    Jit(ParameterMode, ParameterMode),
+    Jif(ParameterMode, ParameterMode),
+    Lst(ParameterMode, ParameterMode, Address),
+    Eqs(ParameterMode, ParameterMode, Address),
+    Rbo(ParameterMode),
 }
 
 pub struct IntcodeComputer {
@@ -144,10 +143,10 @@ impl IntcodeHardware {
         let opcode = self.memory[self.ip].to_string();
         let instruction_code = match opcode.len() {
             1 => format!("0{}", opcode),
-            _ => opcode[(opcode.len() - 2)..=(opcode.len() - 1)].to_owned()
+            _ => opcode[(opcode.len() - 2)..opcode.len()].to_owned()
         };
         let instruction_code = instruction_code.parse::<RegisterType>().map_err(
-            |error| IntcodeComputerError::new(String::from(format!("Could not parse opcode: {}", error))))?;
+            |error| IntcodeComputerError::new(format!("Could not parse opcode: {}", error)))?;
         let parameter_modes = match opcode.len() {
             0..=2 => Vec::new(),
             non_default_modes => {
@@ -207,29 +206,29 @@ impl IntcodeHardware {
                 let parameter = self.parse_parameter(1, &parameter_modes)?;
                 Ok(Instruction::Rbo(parameter))
             },
-            unknown_opcode => Err(IntcodeComputerError::new(String::from(format!("Unknown opcode {}", unknown_opcode))))
+            unknown_opcode => Err(IntcodeComputerError::new(format!("Unknown opcode {}", unknown_opcode)))
         }
     }
 
-    fn parse_parameter(&self, parameter_position: usize, parameter_modes: &Vec<char>) -> Result<Parameter, IntcodeComputerError> {
+    fn parse_parameter(&self, parameter_position: usize, parameter_modes: &[char]) -> Result<ParameterMode, IntcodeComputerError> {
         let parameter_address = self.ip + parameter_position;
         match parameter_modes.get(parameter_position - 1).map(|x| char::to_digit(*x, 10)).flatten().unwrap_or(0) {
-            0 => Ok(Parameter::PositionMode(self.memory[parameter_address])),
-            1 => Ok(Parameter::ImmediateMode(self.memory[parameter_address])),
-            2 => Ok(Parameter::RelativeMode(self.memory[parameter_address])),
+            0 => Ok(ParameterMode::Position(self.memory[parameter_address])),
+            1 => Ok(ParameterMode::Immediate(self.memory[parameter_address])),
+            2 => Ok(ParameterMode::Relative(self.memory[parameter_address])),
             unknown_parameter_mode => Err(IntcodeComputerError::new(
-                String::from(format!("Unknown parameter mode {}", unknown_parameter_mode))))
+                format!("Unknown parameter mode {}", unknown_parameter_mode)))
         }
     }
 
-    fn parse_address(&self, parameter_position: usize, parameter_modes: &Vec<char>)  -> Result<Address, IntcodeComputerError> {
+    fn parse_address(&self, parameter_position: usize, parameter_modes: &[char])  -> Result<Address, IntcodeComputerError> {
         let parameter_address = self.ip + parameter_position;
         match parameter_modes.get(parameter_position - 1).map(|x| char::to_digit(*x, 10)).flatten().unwrap_or(0) {
             0 => Ok(self.memory[parameter_address]),
             1 => Err(IntcodeComputerError::new(String::from("Output parameter can't be in immediate mode"))),
             2 => Ok(self.memory[parameter_address] as i64 + self.relative_base),
             unknown_parameter_mode => Err(IntcodeComputerError::new(
-                String::from(format!("Unknown parameter mode {}", unknown_parameter_mode))))
+                format!("Unknown parameter mode {}", unknown_parameter_mode)))
         }
     }
 
@@ -252,7 +251,7 @@ impl IntcodeHardware {
                 let value = match &self.input {
                     Some(input) => input.recv()
                         .map_err(|mpsc_error| IntcodeComputerError::new(
-                            String::from(format!("Could not read from the channel: {}", mpsc_error))))?,
+                            format!("Could not read from the channel: {}", mpsc_error)))?,
                     None => return Err(IntcodeComputerError::new(String::from("Input not available"))),
                 };
                 self.store_value(value, *address);
@@ -263,7 +262,7 @@ impl IntcodeHardware {
                 for output in &self.outputs {
                     output.send(value)
                         .map_err(|mpsc_error| IntcodeComputerError::new(
-                            String::from(format!("Could not send a value to the channel: {}", mpsc_error))))?;
+                            format!("Could not send a value to the channel: {}", mpsc_error)))?;
                 }
                 self.ip += 2;
             },
@@ -303,19 +302,19 @@ impl IntcodeHardware {
             },
             Instruction::Rbo(parameter) => {
                 let value = self.load_parameter(parameter);
-                self.relative_base = self.relative_base + value;
+                self.relative_base += value;
                 self.ip += 2
             },
         };
         Ok(())
     }
 
-    fn load_parameter(&self, parameter: &Parameter) -> RegisterType {
+    fn load_parameter(&self, parameter: &ParameterMode) -> RegisterType {
         match parameter {
-            Parameter::ImmediateMode(value) => {
+            ParameterMode::Immediate(value) => {
                 value.to_owned()
             }
-            Parameter::PositionMode(address) => {
+            ParameterMode::Position(address) => {
                 let address = *address as usize;
                 if address >= self.memory.len() {
                     0
@@ -323,7 +322,7 @@ impl IntcodeHardware {
                     self.memory[address]
                 }
             }
-            Parameter::RelativeMode(value) => {
+            ParameterMode::Relative(value) => {
                 let address = (self.relative_base as RegisterType + value) as usize;
                 if address >= self.memory.len() {
                     0
@@ -348,7 +347,7 @@ pub mod utils {
 
     pub fn parse_intcode_program(program_as_string: &str) -> Result<Program, IntcodeComputerError> {
         let mut program: Program = Vec::new();
-        for item in program_as_string.split(",") {
+        for item in program_as_string.split(',') {
             match item.parse() {
                 Ok(value) => program.push(value),
                 Err(error) => return Err(IntcodeComputerError::new(format!("Could not parse intcode program: {}", error.to_string()))),

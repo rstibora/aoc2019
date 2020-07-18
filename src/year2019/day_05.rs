@@ -5,7 +5,7 @@ use super::intcode_computer::{IntcodeComputer, utils};
 
 pub fn first_star(input: &str) -> AocResult {
     // Input is a single line of numbers.
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let program = utils::parse_intcode_program(input)?;
 
     let (input_sender, input_receiver) = mpsc::channel();
@@ -18,14 +18,14 @@ pub fn first_star(input: &str) -> AocResult {
 
     computer.wait_for_result()?;
     let output = output_receiver.iter().collect::<Vec<i64>>().pop()
-                    .ok_or(AocError::new(String::from("Output buffer empty")))?;
+                    .ok_or_else(|| AocError::new(String::from("Output buffer empty")))?;
 
     Ok(output.to_string())
 }
 
 pub fn second_star(input: &str) -> AocResult {
     // Input is a single line of numbers.
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let program = utils::parse_intcode_program(input)?;
 
     let (input_sender, input_receiver) = mpsc::channel();
@@ -38,7 +38,7 @@ pub fn second_star(input: &str) -> AocResult {
 
     computer.wait_for_result()?;
     let output = output_receiver.iter().collect::<Vec<i64>>().pop()
-                    .ok_or(AocError::new(String::from("Output buffer empty")))?;
+                    .ok_or_else(|| AocError::new(String::from("Output buffer empty")))?;
 
     Ok(output.to_string())
 }

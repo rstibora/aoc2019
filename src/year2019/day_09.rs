@@ -13,7 +13,7 @@ pub fn second_star(input: &str) -> AocResult {
 }
 
 fn run_with_input(input: &str, computer_input: i64) -> AocResult {
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let program = utils::parse_intcode_program(input)?;
 
     let (input_sender, input_receiver) = mpsc::channel();
@@ -24,6 +24,6 @@ fn run_with_input(input: &str, computer_input: i64) -> AocResult {
     input_sender.send(computer_input).map_err(|_mpsc_error| AocError::new(String::from("Could not send input")))?;
 
     computer.wait_for_result()?;
-    let output = output_receiver.iter().next().ok_or(AocError::new(String::from("Did not get output")))?;
+    let output = output_receiver.iter().next().ok_or_else(|| AocError::new(String::from("Did not get output")))?;
     Ok(output.to_string())
 }

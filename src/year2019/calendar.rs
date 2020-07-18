@@ -14,6 +14,12 @@ impl Calendar2019 {
     }
 }
 
+impl Default for Calendar2019 {
+    fn default() -> Self {
+        Calendar2019::new()
+    }
+}
+
 impl AdventOfCodeCalendar for Calendar2019 {
     fn run_day(&self, day_number: u32, input: Option<&str>) -> (Result<String, AocError>, Result<String, AocError>) {
         let loaded_input: String;
@@ -46,7 +52,7 @@ impl AdventOfCodeCalendar for Calendar2019 {
             10 => (day_10::first_star(input), day_10::second_star(input)),
             _ => {
                 let message = format!("Day {} not implemented", day_number);
-                return (Err(AocError::new(message.clone())), Err(AocError::new(message)));
+                (Err(AocError::new(message.clone())), Err(AocError::new(message)))
             },
         }
     }

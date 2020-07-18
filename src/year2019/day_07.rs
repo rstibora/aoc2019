@@ -7,7 +7,7 @@ use permutohedron::heap_recursive;
 
 // TODO: get rid of unwraps.
 pub fn first_star(input: &str) -> AocResult {
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let program = utils::parse_intcode_program(input)?;
 
     let mut phase_setting = [0, 1, 2, 3, 4];
@@ -42,9 +42,9 @@ pub fn first_star(input: &str) -> AocResult {
         senders.rotate_left(1);
 
         let mut sx_rx: Vec<(mpsc::Sender<i64>, mpsc::Receiver<i64>)> = senders.drain(..).zip(receivers.drain(..)).rev().collect();
-        for i in 0..4 {
+        for computer in amp_computers.iter_mut().take(4) {
             let (sender, receiver) = sx_rx.pop().unwrap();
-            amp_computers[i].start(program.clone(), Some(receiver), vec![sender])?;
+            computer.start(program.clone(), Some(receiver), vec![sender])?;
         }
         let (_, receiver) = sx_rx.pop().unwrap();
         let (output_sender, output_receiver) = mpsc::channel();
@@ -52,17 +52,17 @@ pub fn first_star(input: &str) -> AocResult {
 
         sync_barrier.wait();
 
-        for i in 0..5 {
-            amp_computers[i].wait_for_result()?;
+        for computer in &mut amp_computers {
+            computer.wait_for_result()?;
         }
         outputs.push(output_receiver.recv().map_err(|_mpsc_error| AocError::new(String::from("Did not receive output")))?);
     }
-    let maximum_output = outputs.iter().max().ok_or(AocError::new(String::from("Could not get maximum value")))?;
+    let maximum_output = outputs.iter().max().ok_or_else(|| AocError::new(String::from("Could not get maximum value")))?;
     Ok(maximum_output.to_string())
 }
 
 pub fn second_star(input: &str) -> AocResult {
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let program = utils::parse_intcode_program(input)?;
 
     let mut phase_setting = [5, 6, 7, 8, 9];
@@ -97,9 +97,9 @@ pub fn second_star(input: &str) -> AocResult {
         senders.rotate_left(1);
 
         let mut sx_rx: Vec<(mpsc::Sender<i64>, mpsc::Receiver<i64>)> = senders.drain(..).zip(receivers.drain(..)).rev().collect();
-        for i in 0..4 {
+        for computer in amp_computers.iter_mut().take(4) {
             let (sender, receiver) = sx_rx.pop().unwrap();
-            amp_computers[i].start(program.clone(), Some(receiver), vec![sender])?;
+            computer.start(program.clone(), Some(receiver), vec![sender])?;
         }
         let (sender, receiver) = sx_rx.pop().unwrap();
         let (output_sender, output_receiver) = mpsc::channel();
@@ -107,13 +107,13 @@ pub fn second_star(input: &str) -> AocResult {
 
         sync_barrier.wait();
 
-        for i in 0..5 {
-            amp_computers[i].wait_for_result()?;
+        for computer in &mut amp_computers {
+            computer.wait_for_result()?;
         }
 
         let result = output_receiver.iter().last();
-        outputs.push(result.ok_or(AocError::new(String::from("Did not get output")))?);
+        outputs.push(result.ok_or_else(|| AocError::new(String::from("Did not get output")))?);
     }
-    let maximum_output = outputs.iter().max().ok_or(AocError::new(String::from("Could not get maximum value")))?;
+    let maximum_output = outputs.iter().max().ok_or_else(|| AocError::new(String::from("Could not get maximum value")))?;
     Ok(maximum_output.to_string())
 }

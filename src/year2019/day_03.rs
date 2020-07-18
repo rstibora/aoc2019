@@ -4,10 +4,10 @@ use crate::aoc_error::{AocError, AocResult};
 
 pub fn first_star(input: &str) -> AocResult {
     let mut input_lines = input.lines();
-    let wire_a = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
-        AocError::new(String::from("Not enough lines in the input")))?;
-    let wire_b = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
-        AocError::new(String::from("Not enough lines in the input")))?;
+    let wire_a = input_lines.next().map(parse_path_input).map(path_to_grid)
+        .ok_or_else(|| AocError::new(String::from("Not enough lines in the input")))?;
+    let wire_b = input_lines.next().map(parse_path_input).map(path_to_grid)
+        .ok_or_else(|| AocError::new(String::from("Not enough lines in the input")))?;
     let intersection_grid = intersect_grids(wire_a, wire_b);
 
     let mut closest_intersection = std::i32::MAX;
@@ -17,15 +17,15 @@ pub fn first_star(input: &str) -> AocResult {
         }
         closest_intersection = std::cmp::min(closest_intersection, manhattan_distance(&(0, 0), key));
     }
-    return Ok(closest_intersection.to_string());
+    Ok(closest_intersection.to_string())
 }
 
 pub fn second_star(input: &str) -> AocResult {
     let mut input_lines = input.lines();
-    let wire_a = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
-        AocError::new(String::from("Not enough lines in the input")))?;
-    let wire_b = input_lines.next().map(parse_path_input).map(path_to_grid).ok_or(
-        AocError::new(String::from("Not enough lines in the input")))?;
+    let wire_a = input_lines.next().map(parse_path_input).map(path_to_grid)
+        .ok_or_else(|| AocError::new(String::from("Not enough lines in the input")))?;
+    let wire_b = input_lines.next().map(parse_path_input).map(path_to_grid)
+        .ok_or_else(|| AocError::new(String::from("Not enough lines in the input")))?;
     let intersection_grid = intersect_grids(wire_a, wire_b);
 
     let mut closest_intersection: Option<((i32, i32), u32)> = None;
@@ -45,9 +45,9 @@ pub fn second_star(input: &str) -> AocResult {
     }
 
     if let Some((_, num_steps)) = closest_intersection {
-        return Ok(num_steps.to_string());
+        Ok(num_steps.to_string())
     } else {
-        return Err(AocError::new(String::from("N/A")));
+        Err(AocError::new(String::from("N/A")))
     }
 }
 
@@ -88,7 +88,7 @@ fn manhattan_distance(point_a: &(i32, i32), point_b: &(i32, i32)) -> i32 {
 }
 
 fn parse_path_input(input: &str) -> Vec<(char, i32)> {
-    let splits = input.split(",");
+    let splits = input.split(',');
     let mut output: Vec<(char, i32)> = Vec::new();
     for split in splits {
         let mut chars = split.chars();

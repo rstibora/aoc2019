@@ -54,7 +54,10 @@ pub mod performance {
         }
 
         pub fn calculate(&mut self, argument: U) -> &V {
-            self.cache.entry(argument.clone()).or_insert((self.calculation)(argument))
+            if !self.cache.contains_key(&argument) {
+                self.cache.insert(argument.clone(), (self.calculation)(argument.clone()));
+            }
+            self.cache.get(&argument).unwrap()
         }
     }
 

@@ -6,7 +6,7 @@ const IMAGE_SIZE: (usize, usize) = (25, 6);
 pub fn first_star(input: &str) -> AocResult {
     let input: Vec<String> = input_conversion::input_to_lines(input).map_err(|_err| AocError::new(String::from("Could not get input lines")))?;
     let input_image = input[0].chars().map(|ch| ch.to_digit(10)
-                        .ok_or(AocError::new(String::from("Could not convert input to u32 image"))))
+                        .ok_or_else(|| AocError::new(String::from("Could not convert input to u32 image"))))
                         .collect::<Result<Vec<u32>, AocError>>()?;
     let mut processed_layers = input_image.chunks_exact(IMAGE_SIZE.0 * IMAGE_SIZE.1).map(analyze_layer).collect::<Vec<(u32, u32)>>();
     processed_layers.sort_unstable_by(|a, b| a.cmp(b));
@@ -16,7 +16,7 @@ pub fn first_star(input: &str) -> AocResult {
 pub fn second_star(input: &str) -> AocResult {
     let input: Vec<String> = input_conversion::input_to_lines(input).map_err(|_err| AocError::new(String::from("Could not get input lines")))?;
     let input_image = input[0].chars().map(|ch| ch.to_digit(10)
-                        .ok_or(AocError::new(String::from("Could not convert input to u32 image"))))
+                        .ok_or_else(|| AocError::new(String::from("Could not convert input to u32 image"))))
                         .collect::<Result<Vec<u32>, AocError>>()?;
     let mut output_image: Vec<u32> = vec![2; IMAGE_SIZE.0 * IMAGE_SIZE.1];
     for chunk in input_image.chunks_exact(IMAGE_SIZE.0 * IMAGE_SIZE.1) {

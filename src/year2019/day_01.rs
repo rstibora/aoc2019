@@ -11,7 +11,7 @@ pub fn first_star(input: &str) -> AocResult {
     };
     let mut cached_fuel_for_mass = Cached::new(fuel_for_mass);
     let total_fuel_for_mass: i32 = input.into_iter()
-                                    .map(|mass| cached_fuel_for_mass.calculate(mass).clone())
+                                    .map(|mass| *cached_fuel_for_mass.calculate(mass))
                                     .sum();
     Ok(total_fuel_for_mass.to_string())
 }
@@ -24,7 +24,7 @@ pub fn second_star(input: &str) -> AocResult {
     };
     let mut cached_fuel_for_mass_recursive = Cached::new(fuel_for_mass_recursive);
     let total_fuel_for_mass: i32 = input.into_iter()
-                                    .map(|mass| cached_fuel_for_mass_recursive.calculate(mass).clone())
+                                    .map(|mass| *cached_fuel_for_mass_recursive.calculate(mass))
                                     .sum();
     Ok(total_fuel_for_mass.to_string())
 }

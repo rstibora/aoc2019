@@ -5,8 +5,8 @@ const NUMBER_LENGHT: usize = 6;
 type Number = [u32; NUMBER_LENGHT];
 
 pub fn first_star(input: &str) -> AocResult {
-    let first_line = input.lines().next().ok_or(
-        AocError::new(String::from("Not enough lines in the input")))?;
+    let first_line = input.lines().next().ok_or_else(
+        || AocError::new(String::from("Not enough lines in the input")))?;
 
     let lower_bound: String = first_line.chars().take(6).collect();
     let upper_bound: String = first_line.chars().skip(7).take(6).collect();
@@ -18,8 +18,8 @@ pub fn first_star(input: &str) -> AocResult {
 }
 
 pub fn second_star(input: &str) -> AocResult {
-    let first_line = input.lines().next().ok_or(
-        AocError::new(String::from("Not enough lines in the input")))?;
+    let first_line = input.lines().next().ok_or_else(
+        || AocError::new(String::from("Not enough lines in the input")))?;
 
     let lower_bound: String = first_line.chars().take(6).collect();
     let upper_bound: String = first_line.chars().skip(7).take(6).collect();
@@ -37,7 +37,7 @@ fn generate_numbers_with_check_function(lower_bound: &u32, upper_bound: &u32, ch
         if check_function(&number) && &to_u32(&number) >= lower_bound {
             possible_numbers.push(number);
         }
-        number = increment(&number, NUMBER_LENGHT - 1);
+        number = increment(number, NUMBER_LENGHT - 1);
     }
     possible_numbers
 }
@@ -84,17 +84,16 @@ fn check_has_isolated_double(number: &Number) -> bool {
     false
 }
 
-fn increment(number: &Number, index: usize) -> Number {
-    let mut number = number.clone();
+fn increment(mut number: Number, index: usize) -> Number {
     if number[index] == 9 {
         if index > 0 {
-            number = increment(&number, index - 1);
+            number = increment(number, index - 1);
             number[index] = number[index - 1];
         } else {
-            number[index] = number[index] + 1;
+            number[index] += 1;
         }
     } else {
-        number[index] = number[index] + 1;
+        number[index] += 1;
     }
     number
 }

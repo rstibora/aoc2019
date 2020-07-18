@@ -3,7 +3,7 @@ use super::intcode_computer::{IntcodeComputer, utils};
 
 pub fn first_star(input: &str) -> AocResult {
     // Input is a single line of numbers.
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let mut program = utils::parse_intcode_program(input)?;
     let mut computer = IntcodeComputer::new(None);
     program[1] = 12;
@@ -17,7 +17,7 @@ pub fn first_star(input: &str) -> AocResult {
 pub fn second_star(input: &str) -> AocResult {
     const EXPECTED_VALUE: i64 = 19690720;
 
-    let input = input.lines().next().ok_or(AocError::new(String::from("Could not parse a line")))?;
+    let input = input.lines().next().ok_or_else(|| AocError::new(String::from("Could not parse a line")))?;
     let mut program = utils::parse_intcode_program(input)?;
 
     for noun in 0..99 {

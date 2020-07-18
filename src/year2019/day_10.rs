@@ -9,7 +9,7 @@ pub fn first_star(input: &str) -> AocResult {
     let asteroid_map = convert_input_to_asteroid_map(input)?;
     let visible_asteroids_map = calculate_asteroid_visibility(&asteroid_map);
     let max_visible_asteroids = visible_asteroids_map.values().map(HashMap::len).max()
-                                    .ok_or(AocError::new(String::from("Invalid station position")))?;
+                                    .ok_or_else(|| AocError::new(String::from("Invalid station position")))?;
     Ok(max_visible_asteroids.to_string())
 }
 
@@ -18,14 +18,14 @@ pub fn second_star(input: &str) -> AocResult {
     let mut asteroid_map = convert_input_to_asteroid_map(input)?;
     let visible_asteroids_map = calculate_asteroid_visibility(&asteroid_map);
     let (station_position, _) = visible_asteroids_map.iter().max_by_key(|(_, visible_asteroids)| visible_asteroids.len())
-        .ok_or(AocError::new(String::from("Invalid station position")))?;
+        .ok_or_else(|| AocError::new(String::from("Invalid station position")))?;
 
     // Shoot them asteroids.
     // let station_position = &(8, 3);
     let mut destroyed_targets = 0;
     let mut targets = acquire_targets(station_position, &asteroid_map);
     let last_destroyed_asteroid_position = loop {
-        if targets.len() == 0 {
+        if targets.is_empty() {
             targets = acquire_targets(station_position, &asteroid_map)
         }
 
@@ -72,7 +72,7 @@ fn calculate_asteroid_visibility(asteroid_map: &AsteroidMap) -> VisibilityMap {
 
             let direction = (target_position.0 - source_position.0,
                              target_position.1 - source_position.1);
-            visible_asteroids_map.entry(source_position.to_owned()).or_insert(HashMap::new())
+            visible_asteroids_map.entry(source_position.to_owned()).or_insert_with(HashMap::new)
                 .entry(normalize_direction(direction))
                 // Keep only the closest asteroid's position in the given direction.
                 .and_modify(|existing_position: &mut (i32, i32)| {
@@ -82,7 +82,7 @@ fn calculate_asteroid_visibility(asteroid_map: &AsteroidMap) -> VisibilityMap {
                         existing_position.1 = target_position.1;
                     }
                 })
-                .or_insert(target_position.to_owned());
+                .or_insert_with(|| target_position.to_owned());
         }
     }
     visible_asteroids_map
@@ -120,7 +120,7 @@ fn clockwise_angle(direction_vector: SpaceCoordinate) -> f32 {
     let mut angle = normalized_vector.1.atan2(normalized_vector.0) + std::f32::consts::PI / 2.;
 
     if angle < 0. {
-        angle = 2. * std::f32::consts::PI + angle;
+        angle += 2. * std::f32::consts::PI;
     }
     angle
 }
