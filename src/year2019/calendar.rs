@@ -3,7 +3,8 @@ use crate::utils::file_handling;
 use crate::aoc_error::AocError;
 
 use super::configuration;
-use super::{day_01, day_02, day_03, day_04, day_05, day_06, day_07, day_08, day_09, day_10};
+use super::{day_01, day_02, day_03, day_04, day_05, day_06, day_07, day_08, day_09, day_10,
+            day_11};
 
 
 pub struct Calendar2019;
@@ -50,6 +51,7 @@ impl AdventOfCodeCalendar for Calendar2019 {
             8 => (day_08::first_star(input), day_08::second_star(input)),
             9 => (day_09::first_star(input), day_09::second_star(input)),
             10 => (day_10::first_star(input), day_10::second_star(input)),
+            11 => (day_11::first_star(input), Err(AocError::new(String::from("N/A")))),
             _ => {
                 let message = format!("Day {} not implemented", day_number);
                 (Err(AocError::new(message.clone())), Err(AocError::new(message)))
