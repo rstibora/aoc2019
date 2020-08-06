@@ -123,3 +123,8 @@ fn day_nine() {
 fn day_ten() {
     run_test_for_day(10);
 }
+
+#[test]
+fn day_eleven() {
+    run_test_for_day(11);
+}

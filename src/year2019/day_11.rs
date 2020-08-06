@@ -4,7 +4,7 @@ use std::sync::mpsc;
 use crate::aoc_error::{AocError, AocResult};
 use super::intcode_computer::{IntcodeComputer, utils};
 
-pub fn first_star(input: &str) -> AocResult {
+fn run_robot_with_initial_tile(input: &str, initial_tile: i64) -> Result<HashMap<(i32, i32), i64>, AocError>{
     let mut robot_direction = (0, 1);
     let mut robot_position = (0, 0);
     let mut colored_positions = HashMap::new();
@@ -17,7 +17,7 @@ pub fn first_star(input: &str) -> AocResult {
 
     brain.start(program, Some(input_receiver), vec![output_sender])?;
 
-    input_sender.send(0).map_err(|err| AocError::new(format!("Could not send input: {}", err)))?;
+    input_sender.send(initial_tile).map_err(|err| AocError::new(format!("Could not send input: {}", err)))?;
     loop {
         if let Ok(paint_instruction) = output_receiver.recv() {
             match paint_instruction {
@@ -26,7 +26,7 @@ pub fn first_star(input: &str) -> AocResult {
                 _ => return Err(AocError::new(String::from("Invalid paint instruction")))
             };
         } else {
-            // return Err(AocError::new(String::from("Brain terminated unexpectedly")));
+            // Robot has finished.
             break;
         }
 
@@ -57,16 +57,39 @@ pub fn first_star(input: &str) -> AocResult {
 
             robot_position.0 += robot_direction.0;
             robot_position.1 += robot_direction.1;
-            // println!("direction {:?}, position {:?}", robot_direction, robot_position);
         } else {
-            // return Err(AocError::new(String::from("Brain terminated unexpectedly")));
-            break;
+            return Err(AocError::new(String::from("Brain terminated unexpectedly when moving")));
         }
 
         let color = colored_positions.get(&robot_position).unwrap_or(&0);
-        if let Err(_) = input_sender.send(color.to_owned()) {
-            break;
-        }
+        input_sender.send(color.to_owned())
+                    .map_err(|err| AocError::new(format!("Brain terminated when receiveing input: {}", err)))?;
     }
-    return Ok(colored_positions.len().to_string());
+    Ok(colored_positions)
+}
+
+pub fn first_star(input: &str) -> AocResult {
+    let colored_positions = run_robot_with_initial_tile(input, 0)?;
+    Ok(colored_positions.len().to_string())
+}
+
+pub fn second_star(input: &str) -> AocResult {
+    let colored_positions = run_robot_with_initial_tile(input, 1)?;
+    let mut x_positions = colored_positions.keys().map(|position| position.0).collect::<Vec<i32>>();
+    let mut y_positions = colored_positions.keys().map(|position| position.1).collect::<Vec<i32>>();
+    x_positions.sort();
+    y_positions.sort();
+
+    let mut output_string = String::from("\n");
+    for y in (y_positions[0]..=y_positions[y_positions.len() - 1]).rev() {
+        for x in x_positions[0]..=x_positions[x_positions.len() - 1] {
+            let mut color = '.';
+            if colored_positions.get(&(x, y)).unwrap_or(&0) == &1 {
+                color = '#'
+            }
+            output_string.push(color);
+        }
+        output_string.push('\n')
+    }
+    Ok(output_string)
 }
