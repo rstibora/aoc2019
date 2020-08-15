@@ -128,3 +128,8 @@ fn day_ten() {
 fn day_eleven() {
     run_test_for_day(11);
 }
+
+#[test]
+fn day_twelve() {
+    run_test_for_day(12);
+}
