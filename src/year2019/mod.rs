@@ -1,18 +1,18 @@
 pub mod calendar;
 pub mod configuration;
 
-mod day_01;
-mod day_02;
-mod day_03;
-mod day_04;
-mod day_05;
-mod day_06;
-mod day_07;
-mod day_08;
-mod day_09;
-mod day_10;
-mod day_11;
-mod day_12;
-mod day_13;
+pub mod day_01;
+pub mod day_02;
+pub mod day_03;
+pub mod day_04;
+pub mod day_05;
+pub mod day_06;
+pub mod day_07;
+pub mod day_08;
+pub mod day_09;
+pub mod day_10;
+pub mod day_11;
+pub mod day_12;
+pub mod day_13;
 
 mod intcode_computer;

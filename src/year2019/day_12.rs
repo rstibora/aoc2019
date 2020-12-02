@@ -4,17 +4,40 @@ use crate::aoc_error::{AocError, AocResult};
 pub fn first_star(input: &str) -> AocResult {
     let mut positions = parse_positions_from_input(input)?;
     let mut velocities: Vec<[i32; 3]> = vec![[0, 0, 0]; positions.len()];
-    for _ in 0..1000 {
-        // Update velocities by applying gravity.
-        for updated_moon_index in 0..positions.len() {
-            for observed_moon_index in 0..positions.len() {
-                if updated_moon_index == observed_moon_index {
-                    continue;
-                }
+    simulate(1_000_000_000, &mut positions, &mut velocities);
 
+    let system_energy = positions.iter().zip(velocities.iter())
+                            .fold(0, |acc, (position, velocity)| {
+                                acc + (abs(position[0]) + abs(position[1]) + abs(position[2]))
+                                    * (abs(velocity[0]) + abs(velocity[1]) + abs(velocity[2]))});
+    Ok(system_energy.to_string())
+}
+
+pub fn second_star(input: &str) -> AocResult {
+    let mut positions = parse_positions_from_input(input)?;
+    let mut velocities: Vec<[i32; 3]> = vec![[0, 0, 0]; positions.len()];
+    let original_velocities: Vec<[i32; 3]> = vec![[0, 0, 0]; positions.len()];
+    
+    let mut num_iterations: u64 = 0;
+    simulate(1, &mut positions, &mut velocities);
+    while positions != original_velocities {
+        num_iterations += 1;
+        simulate(1, &mut positions, &mut velocities);
+    }
+
+    Ok(num_iterations.to_string())
+}
+
+pub fn simulate(iterations: u64, positions: &mut Vec<[i32; 3]>, velocities: &mut Vec<[i32; 3]>) {
+    let num_moons = positions.len();
+    for _ in 0..iterations {
+        // Update velocities by applying gravity.
+        for moon_a_index in 0..num_moons - 1 {
+            for moon_b_index in moon_a_index + 1..num_moons {
                 for coordinate in 0..3 {
-                    velocities[updated_moon_index][coordinate] += distance_to_velocity_change(
-                        positions[observed_moon_index][coordinate] - positions[updated_moon_index][coordinate]);
+                    let distance_signum = num::signum(positions[moon_b_index][coordinate] - positions[moon_a_index][coordinate]);
+                    velocities[moon_a_index][coordinate] += distance_signum;
+                    velocities[moon_b_index][coordinate] -= distance_signum;
                 }
             }
         }
@@ -26,12 +49,6 @@ pub fn first_star(input: &str) -> AocResult {
             }
         }
     }
-
-    let system_energy = positions.iter().zip(velocities.iter())
-                            .fold(0, |acc, (position, velocity)| {
-                                acc + (abs(position[0]) + abs(position[1]) + abs(position[2]))
-                                    * (abs(velocity[0]) + abs(velocity[1]) + abs(velocity[2]))});
-    Ok(system_energy.to_string())
 }
 
 fn parse_positions_from_input(input: &str) -> Result<Vec<[i32; 3]>, AocError> {
@@ -49,13 +66,4 @@ fn parse_positions_from_input(input: &str) -> Result<Vec<[i32; 3]>, AocError> {
         positions.push(position)
     }
     Ok(positions)
-}
-
-fn distance_to_velocity_change(distance: i32) -> i32 {
-    match distance {
-        0 => 0,
-        x if x < 0 => -1,
-        x if x > 0 => 1,
-        _ => panic!()
-    }
 }
