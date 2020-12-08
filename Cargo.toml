@@ -11,9 +11,6 @@ permutohedron = "0.2.4"
 num = "0.3.0"
 assert_approx_eq = "1.1.0"
 
-[dev-dependencies]
-criterion = "0.3.3"
-
 [lib]
 name = "aoc_framework"
 path = "src/lib.rs"
@@ -21,7 +18,3 @@ path = "src/lib.rs"
 [[bin]]
 name = "aoc_runner"
 path = "src/main.rs"
-
-[[bench]]
-name = "day_12_benchmark"
-harness = false
