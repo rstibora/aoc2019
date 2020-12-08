@@ -18,17 +18,12 @@ fn run_robot_with_initial_tile(input: &str, initial_tile: i64) -> Result<HashMap
     brain.start(program, Some(input_receiver), vec![output_sender])?;
 
     input_sender.send(initial_tile).map_err(|err| AocError::new(format!("Could not send input: {}", err)))?;
-    loop {
-        if let Ok(paint_instruction) = output_receiver.recv() {
-            match paint_instruction {
-                0 => colored_positions.insert(robot_position, 0),
-                1 => colored_positions.insert(robot_position, 1),
-                _ => return Err(AocError::new(String::from("Invalid paint instruction")))
-            };
-        } else {
-            // Robot has finished.
-            break;
-        }
+    while let Ok(paint_instruction) = output_receiver.recv() {
+        match paint_instruction {
+            0 => colored_positions.insert(robot_position, 0),
+            1 => colored_positions.insert(robot_position, 1),
+            _ => return Err(AocError::new(String::from("Invalid paint instruction")))
+        };
 
         if let Ok(direction_instruction) = output_receiver.recv() {
             robot_direction = match direction_instruction {
@@ -77,8 +72,8 @@ pub fn second_star(input: &str) -> AocResult {
     let colored_positions = run_robot_with_initial_tile(input, 1)?;
     let mut x_positions = colored_positions.keys().map(|position| position.0).collect::<Vec<i32>>();
     let mut y_positions = colored_positions.keys().map(|position| position.1).collect::<Vec<i32>>();
-    x_positions.sort();
-    y_positions.sort();
+    x_positions.sort_unstable();
+    y_positions.sort_unstable();
 
     let mut output_string = String::from("\n");
     for y in (y_positions[0]..=y_positions[y_positions.len() - 1]).rev() {

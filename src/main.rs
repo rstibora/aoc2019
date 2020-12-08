@@ -6,7 +6,7 @@ mod year2019;
 use interface::AdventOfCodeCalendar;
 
 fn main() {
-    let day = 12;
+    let day = 13;
     let calendar = year2019::calendar::Calendar2019::new();
     let (first_star, second_star) = calendar.run_day(day, None);
     let first_star = first_star.unwrap_or_else(|error| error.to_string());

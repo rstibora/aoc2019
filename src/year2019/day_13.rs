@@ -34,5 +34,5 @@ pub fn first_star(input: &str) -> AocResult {
         tiles.insert((x_pos, y_pos), tile_id);
     }
 
-    Ok(tiles.values().filter(|&&tile| {tile == TILE_BLOCK}).into_iter().collect::<Vec<&i64>>().len().to_string())
+    Ok(tiles.values().filter(|&&tile| {tile == TILE_BLOCK}).into_iter().count().to_string())
 }

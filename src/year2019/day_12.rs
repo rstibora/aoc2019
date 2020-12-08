@@ -25,11 +25,11 @@ pub fn second_star(input: &str) -> AocResult {
         let mut num_steps = 1;
         simulate(1, &mut positions, &mut velocities, dimension..dimension + 1);
         num_steps_per_dimension[dimension] = loop {
-            while positions != original_positions || velocities != original_velocities {
-                num_steps += 1;
-                simulate(1, &mut positions, &mut velocities, dimension..dimension + 1);
+            if positions == original_positions && velocities == original_velocities {
+                break num_steps
             }
-            break num_steps
+            num_steps += 1;
+            simulate(1, &mut positions, &mut velocities, dimension..dimension + 1);
         }
     }
     let result = lcm(lcm(num_steps_per_dimension[0], num_steps_per_dimension[1]), num_steps_per_dimension[2]);
